@@ -3,7 +3,6 @@ name: Deploy App to GitHub Pages
 on:
   push:
     branches: [claude/project-management-webapp-Hgig5, main]
-    paths: [app/**]
   workflow_dispatch:
 
 permissions:
