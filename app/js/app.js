@@ -443,8 +443,7 @@ const Router = {
     const content = document.getElementById('main-content');
     content.innerHTML = '';
 
-    // Destroy previous charts
-    Chart.helpers?.each(Chart.instances, c => c.destroy());
+    // Canvas charts are stateless; nothing to destroy.
 
     if (route === 'dashboard') {
       UI.setTitle('Dashboard', 'A10 Projects');
@@ -1640,11 +1639,11 @@ const ReportsView = {
       </div>
     `;
 
-    this._renderCharts(projects, tasks, actions);
+    // Defer until canvas elements are laid out
+    requestAnimationFrame(() => this._renderCharts(projects, tasks, actions));
   },
 
   _renderCharts(projects, tasks, actions) {
-    const navy   = '#0f2a44';
     const accent = '#3e6697';
     const light  = '#c4d7ff';
     const mid    = '#6b7280';
@@ -1652,62 +1651,33 @@ const ReportsView = {
     const amber  = '#f59e0b';
     const red    = '#ef4444';
 
-    const defaultOpts = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { labels: { font: { family: 'Inter', size: 12, weight: '700' }, color: navy } } },
-    };
-
     /* Chart 1: Status doughnut */
     const statusCounts = {};
     PROJECT_STATUSES.forEach(s => statusCounts[s] = 0);
     projects.forEach(p => { statusCounts[p.status] = (statusCounts[p.status] || 0) + 1; });
 
-    new Chart(document.getElementById('chart-status'), {
-      type: 'doughnut',
-      data: {
-        labels: ['Activo', 'Em Pausa', 'Concluído', 'Rascunho'],
-        datasets: [{ data: [statusCounts.active, statusCounts['on-hold'], statusCounts.completed, statusCounts.draft], backgroundColor: [green, amber, mid, accent], borderWidth: 0, hoverOffset: 6 }],
-      },
-      options: { ...defaultOpts, cutout: '65%', plugins: { ...defaultOpts.plugins, legend: { ...defaultOpts.plugins.legend, position: 'bottom' } } },
+    A10Charts.doughnut('chart-status', {
+      labels: ['Activo', 'Em Pausa', 'Concluído', 'Rascunho'],
+      data:   [statusCounts.active, statusCounts['on-hold'], statusCounts.completed, statusCounts.draft],
+      colors: [green, amber, mid, accent],
     });
 
     /* Chart 2: Budget bar */
-    new Chart(document.getElementById('chart-budget'), {
-      type: 'bar',
-      data: {
-        labels: projects.map(p => p.name.length > 18 ? p.name.slice(0, 18) + '…' : p.name),
-        datasets: [
-          { label: 'Planeado', data: projects.map(p => DB.projectPlanned(p.id)), backgroundColor: light },
-          { label: 'Real',     data: projects.map(p => DB.projectSpent(p.id)),   backgroundColor: accent },
-        ],
-      },
-      options: {
-        ...defaultOpts,
-        scales: {
-          x: { ticks: { font: { family: 'Inter', size: 11 }, color: mid } },
-          y: { ticks: { font: { family: 'Inter', size: 11 }, color: mid, callback: v => `€${(v/1000).toFixed(0)}k` } },
-        },
-        plugins: { ...defaultOpts.plugins, legend: { ...defaultOpts.plugins.legend, position: 'bottom' } },
-      },
+    A10Charts.bar('chart-budget', {
+      labels: projects.map(p => p.name.length > 20 ? p.name.slice(0, 20) + '…' : p.name),
+      datasets: [
+        { label: 'Planeado', data: projects.map(p => DB.projectPlanned(p.id)), backgroundColor: light },
+        { label: 'Real',     data: projects.map(p => DB.projectSpent(p.id)),   backgroundColor: accent },
+      ],
+      yTickFormat: v => `€${(v / 1000).toFixed(0)}k`,
     });
 
-    /* Chart 3: Progress bar */
-    new Chart(document.getElementById('chart-progress'), {
-      type: 'bar',
-      data: {
-        labels: projects.map(p => p.name.length > 18 ? p.name.slice(0, 18) + '…' : p.name),
-        datasets: [{ label: 'Conclusão (%)', data: projects.map(p => DB.projectCompletion(p.id)), backgroundColor: projects.map(p => p.status === 'completed' ? green : accent), borderRadius: 4 }],
-      },
-      options: {
-        ...defaultOpts,
-        indexAxis: 'y',
-        scales: {
-          x: { max: 100, ticks: { font: { family: 'Inter', size: 11 }, color: mid, callback: v => v + '%' } },
-          y: { ticks: { font: { family: 'Inter', size: 11 }, color: mid } },
-        },
-        plugins: { ...defaultOpts.plugins, legend: { display: false } },
-      },
+    /* Chart 3: Horizontal progress bar */
+    const colors3 = projects.map(p => p.status === 'completed' ? green : accent);
+    A10Charts.barH('chart-progress', {
+      labels: projects.map(p => p.name.length > 22 ? p.name.slice(0, 22) + '…' : p.name),
+      datasets: [{ label: 'Conclusão', data: projects.map(p => DB.projectCompletion(p.id)), backgroundColor: colors3 }],
+      xTickFormat: v => `${Math.round(v)}%`,
     });
 
     /* Chart 4: Actions by priority */
@@ -1719,23 +1689,13 @@ const ReportsView = {
       else byPriority[a.priority].open++;
     });
 
-    new Chart(document.getElementById('chart-actions'), {
-      type: 'bar',
-      data: {
-        labels: ['Baixa', 'Média', 'Alta', 'Crítica'],
-        datasets: [
-          { label: 'Abertas', data: PRIORITIES.map(p => byPriority[p]?.open || 0), backgroundColor: [mid, accent, amber, red], borderRadius: 4 },
-          { label: 'Feitas',  data: PRIORITIES.map(p => byPriority[p]?.done || 0), backgroundColor: green, borderRadius: 4 },
-        ],
-      },
-      options: {
-        ...defaultOpts,
-        scales: {
-          x: { stacked: true, ticks: { font: { family: 'Inter', size: 11 }, color: mid } },
-          y: { stacked: true, ticks: { font: { family: 'Inter', size: 11 }, color: mid } },
-        },
-        plugins: { ...defaultOpts.plugins, legend: { ...defaultOpts.plugins.legend, position: 'bottom' } },
-      },
+    A10Charts.bar('chart-actions', {
+      labels: ['Baixa', 'Média', 'Alta', 'Crítica'],
+      datasets: [
+        { label: 'Abertas', data: PRIORITIES.map(p => byPriority[p]?.open || 0), backgroundColor: [mid, accent, amber, red] },
+        { label: 'Feitas',  data: PRIORITIES.map(p => byPriority[p]?.done || 0), backgroundColor: green },
+      ],
+      stacked: true,
     });
   },
 };
