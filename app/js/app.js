@@ -1710,6 +1710,9 @@ document.getElementById('form-login').addEventListener('submit', e => {
   const errorEl  = document.getElementById('login-error');
   if (Auth.login(email, password)) {
     errorEl.classList.add('hidden');
+    const session = Auth.current();
+    document.getElementById('user-name').textContent = session.name;
+    document.getElementById('user-avatar').textContent = session.avatar;
     Router.go('dashboard');
   } else {
     errorEl.classList.remove('hidden');
