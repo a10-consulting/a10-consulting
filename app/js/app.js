@@ -276,6 +276,24 @@ const DB = {
   saveInvoices(arr)       { this.set('invoices', arr); },
   saveRisks(arr)          { this.set('risks', arr); },
 
+  /* A10 outbound invoices & company settings */
+  a10Invoices()        { return this.get('a10Invoices') || []; },
+  saveA10Invoices(arr) { this.set('a10Invoices', arr); },
+  a10Settings() {
+    return this.get('a10Settings') || {
+      name: 'A10 Consulting Lda', address: '', city: '', postalCode: '',
+      country: 'Portugal', nif: '', email: '', phone: '', iban: '', bic: '',
+      paymentTerms: '30 days net',
+    };
+  },
+  saveA10Settings(obj) { this.set('a10Settings', obj); },
+  nextInvoiceNumber(type) {
+    const year = new Date().getFullYear();
+    const prefix = type === 'credit-note' ? `A10-NC-${year}` : `A10-FT-${year}`;
+    const count = this.a10Invoices().filter(i => i.invoiceNumber?.startsWith(prefix)).length;
+    return `${prefix}-${String(count + 1).padStart(3, '0')}`;
+  },
+
   projectById(id)  { return this.projects().find(p => p.id === id); },
 
   /* Computed: project completion based on tasks */
@@ -519,6 +537,23 @@ function statusLabel(s) {
   return map[s] || s;
 }
 
+function a10InvStatusBadge(status) {
+  const map = {
+    'draft':     '<span class="badge badge-draft">Draft</span>',
+    'sent':      '<span class="badge badge-in-progress">Sent</span>',
+    'paid':      '<span class="badge badge-done">Paid</span>',
+    'overdue':   '<span class="badge badge-critical">Overdue</span>',
+    'cancelled': '<span class="badge">Cancelled</span>',
+  };
+  return map[status] || `<span class="badge">${status}</span>`;
+}
+
+function calcInvTotals(items) {
+  const subtotal  = items.reduce((s, it) => s + (parseFloat(it.qty) || 0) * (parseFloat(it.unitPrice) || 0), 0);
+  const vatAmount = items.reduce((s, it) => s + (parseFloat(it.qty) || 0) * (parseFloat(it.unitPrice) || 0) * (parseFloat(it.vatRate) || 0) / 100, 0);
+  return { subtotal, vatAmount, total: subtotal + vatAmount };
+}
+
 function progressBar(pct) {
   return `<div class="progress-wrap">
     <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
@@ -687,6 +722,17 @@ const Router = {
       UI.setTitle('Reports', 'A10 Projects');
       UI.setHeaderActions('');
       ReportsView.render();
+    } else if (route === 'finance') {
+      UI.setTitle('Invoicing', 'Finance');
+      UI.setHeaderActions(`
+        <button class="btn btn-ghost btn-sm" id="btn-a10-settings">⚙ A10 Settings</button>
+        <button class="btn btn-secondary" id="btn-new-cn">+ Credit Note</button>
+        <button class="btn btn-primary" id="btn-new-inv">+ New Invoice</button>
+      `);
+      FinanceView.render();
+      document.getElementById('btn-a10-settings')?.addEventListener('click', () => A10SettingsModal.open());
+      document.getElementById('btn-new-inv')?.addEventListener('click', () => A10InvoiceModal.open(null, 'invoice'));
+      document.getElementById('btn-new-cn')?.addEventListener('click', () => A10InvoiceModal.open(null, 'credit-note'));
     } else if (route === 'clients') {
       UI.setTitle('Clients', 'A10 Projects');
       UI.setHeaderActions('<button class="btn btn-primary" id="btn-new-client">+ New Client</button>');
@@ -2516,6 +2562,7 @@ const ClientsView = {
     const c = clientId ? DB.clients().find(x => x.id === clientId) : null;
     UI.openModal(c ? 'Edit Client' : 'New Client', `
       <form id="form-client">
+        <div class="form-section-title">Contact Details</div>
         <div class="form-row">
           <div class="form-field"><label>Company Name *</label><input name="name" required value="${c?.name || ''}"></div>
           <div class="form-field"><label>Sector</label>
@@ -2531,12 +2578,28 @@ const ClientsView = {
           <div class="form-field"><label>Country</label><input name="country" value="${c?.country || ''}"></div>
         </div>
         <div class="form-field"><label>Notes</label><textarea name="notes" rows="2">${c?.notes || ''}</textarea></div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+
+        <div class="form-section-title" style="margin-top:18px">Billing Information</div>
+        <div class="form-row">
+          <div class="form-field"><label>Billing Company Name <span style="font-weight:400;color:var(--mid)">(if different)</span></label><input name="billingName" value="${c?.billingName || ''}" placeholder="${c?.name || ''}"></div>
+          <div class="form-field"><label>VAT / NIF Number</label><input name="vatNumber" value="${c?.vatNumber || ''}" placeholder="e.g. PT123456789"></div>
+        </div>
+        <div class="form-field"><label>Billing Address</label><input name="billingAddress" value="${c?.billingAddress || ''}" placeholder="Street, number, floor…"></div>
+        <div class="form-row">
+          <div class="form-field"><label>City</label><input name="billingCity" value="${c?.billingCity || ''}"></div>
+          <div class="form-field"><label>Postal Code</label><input name="billingPostalCode" value="${c?.billingPostalCode || ''}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-field"><label>Billing Country</label><input name="billingCountry" value="${c?.billingCountry || c?.country || ''}"></div>
+          <div class="form-field"><label>Payment Terms</label><input name="paymentTerms" value="${c?.paymentTerms || ''}" placeholder="e.g. 30 days net"></div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
           <button type="button" class="btn btn-secondary" id="modal-cancel">Cancel</button>
           <button type="submit" class="btn btn-primary">${c ? 'Save Changes' : 'Add Client'}</button>
         </div>
       </form>
-    `);
+    `, true);
     document.getElementById('modal-cancel').addEventListener('click', UI.closeModal.bind(UI));
     document.getElementById('form-client').addEventListener('submit', e => {
       e.preventDefault();
@@ -2833,6 +2896,474 @@ const UsersView = {
       UI.toast(`Password updated for ${user.name}.`, 'success');
       UsersView.render();
     });
+  },
+};
+
+/* ── Finance View ──────────────────────────────────────────── */
+
+const FinanceView = {
+  _filter: 'all',
+  _statusFilter: 'all',
+
+  render() {
+    const all  = DB.a10Invoices();
+    const year = new Date().getFullYear();
+    const thisYear = all.filter(i => i.date?.startsWith(String(year)));
+    const invoices = thisYear.filter(i => i.type === 'invoice');
+    const cns      = thisYear.filter(i => i.type === 'credit-note');
+    const paid     = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + (i.total || 0), 0);
+    const outstanding = invoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled' && i.status !== 'draft')
+                                 .reduce((s, i) => s + (i.total || 0), 0);
+    const totalIssued = invoices.reduce((s, i) => s + (i.total || 0), 0);
+
+    const mc = document.getElementById('main-content');
+    mc.innerHTML = `
+      <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="stat-card">
+          <div class="stat-label">Invoiced ${year}</div>
+          <div class="stat-value">${fmt(totalIssued)}</div>
+          <div class="stat-sub">${invoices.length} invoice(s)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Paid</div>
+          <div class="stat-value" style="color:#16a34a">${fmt(paid)}</div>
+          <div class="stat-sub">${invoices.filter(i=>i.status==='paid').length} invoice(s)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Outstanding</div>
+          <div class="stat-value" style="color:${outstanding>0?'#d97706':'inherit'}">${fmt(outstanding)}</div>
+          <div class="stat-sub">${invoices.filter(i=>i.status==='sent'||i.status==='overdue').length} pending</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Credit Notes ${year}</div>
+          <div class="stat-value">${cns.length}</div>
+          <div class="stat-sub">${fmt(cns.reduce((s,i)=>s+(i.total||0),0))}</div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div style="padding:16px 18px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div class="filter-bar" style="flex:1;min-width:0">
+            <button class="filter-tab ${this._filter==='all'?'active':''}" data-ftype="all">All (${all.length})</button>
+            <button class="filter-tab ${this._filter==='invoice'?'active':''}" data-ftype="invoice">Invoices</button>
+            <button class="filter-tab ${this._filter==='credit-note'?'active':''}" data-ftype="credit-note">Credit Notes</button>
+          </div>
+          <select class="search-box" id="finance-status-filter" style="width:auto">
+            <option value="all">All statuses</option>
+            <option value="draft" ${this._statusFilter==='draft'?'selected':''}>Draft</option>
+            <option value="sent" ${this._statusFilter==='sent'?'selected':''}>Sent</option>
+            <option value="paid" ${this._statusFilter==='paid'?'selected':''}>Paid</option>
+            <option value="overdue" ${this._statusFilter==='overdue'?'selected':''}>Overdue</option>
+            <option value="cancelled" ${this._statusFilter==='cancelled'?'selected':''}>Cancelled</option>
+          </select>
+        </div>
+        <div id="finance-table-wrap"></div>
+      </div>`;
+
+    this._renderTable(all);
+
+    mc.querySelectorAll('[data-ftype]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this._filter = btn.dataset.ftype;
+        mc.querySelectorAll('[data-ftype]').forEach(b => b.classList.toggle('active', b.dataset.ftype === this._filter));
+        this._renderTable(all);
+      });
+    });
+    document.getElementById('finance-status-filter')?.addEventListener('change', e => {
+      this._statusFilter = e.target.value; this._renderTable(all);
+    });
+  },
+
+  _renderTable(all) {
+    let list = all;
+    if (this._filter !== 'all')         list = list.filter(i => i.type === this._filter);
+    if (this._statusFilter !== 'all')   list = list.filter(i => i.status === this._statusFilter);
+    list = [...list].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+    const wrap = document.getElementById('finance-table-wrap');
+    if (!list.length) {
+      wrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🧾</div><p>No documents yet. Create your first invoice.</p></div>`;
+      return;
+    }
+    wrap.innerHTML = `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Number</th><th>Type</th><th>Client</th><th>Project</th>
+            <th>Date</th><th>Due Date</th><th>Total (incl. VAT)</th><th>Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map(inv => {
+            const cl = DB.clients().find(c => c.id === inv.clientId);
+            const pr = DB.projectById(inv.projectId);
+            const overdue = inv.status === 'sent' && inv.dueDate && new Date(inv.dueDate) < new Date();
+            const effStatus = overdue ? 'overdue' : inv.status;
+            return `<tr>
+              <td style="font-weight:700;font-size:13px;white-space:nowrap">${inv.invoiceNumber}</td>
+              <td><span style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase">${inv.type === 'credit-note' ? 'Credit Note' : 'Invoice'}</span></td>
+              <td style="font-size:13px">${cl?.name || '—'}</td>
+              <td style="font-size:12px;color:var(--mid)">${pr?.name || '—'}</td>
+              <td style="font-size:12px;color:var(--mid);white-space:nowrap">${fmtDate(inv.date)}</td>
+              <td style="font-size:12px;white-space:nowrap;${overdue?'color:#dc2626;font-weight:700':''}">${fmtDate(inv.dueDate)}${overdue?' ⚠':''}</td>
+              <td style="font-weight:700;white-space:nowrap">${fmt(inv.total || 0)}</td>
+              <td>${a10InvStatusBadge(effStatus)}</td>
+              <td>
+                <div class="actions-cell">
+                  <button class="btn btn-secondary btn-sm" data-preview-inv="${inv.id}">View</button>
+                  <button class="btn btn-secondary btn-sm" data-edit-inv="${inv.id}">Edit</button>
+                  <button class="btn btn-danger btn-sm" data-delete-inv="${inv.id}">✕</button>
+                </div>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+
+    wrap.querySelectorAll('[data-preview-inv]').forEach(btn => btn.addEventListener('click', () => {
+      const inv = DB.a10Invoices().find(i => i.id === btn.dataset.previewInv);
+      if (inv) InvoiceDocGenerator.preview(inv);
+    }));
+    wrap.querySelectorAll('[data-edit-inv]').forEach(btn => btn.addEventListener('click', () => {
+      A10InvoiceModal.open(btn.dataset.editInv);
+    }));
+    wrap.querySelectorAll('[data-delete-inv]').forEach(btn => btn.addEventListener('click', () => {
+      if (!UI.confirm('Delete this document?')) return;
+      DB.saveA10Invoices(DB.a10Invoices().filter(i => i.id !== btn.dataset.deleteInv));
+      UI.toast('Deleted.', 'default');
+      FinanceView.render();
+    }));
+  },
+};
+
+/* ── A10 Invoice Modal ─────────────────────────────────────── */
+
+const A10InvoiceModal = {
+  open(invId, forceType) {
+    const inv  = invId ? DB.a10Invoices().find(i => i.id === invId) : null;
+    const type = inv ? inv.type : (forceType || 'invoice');
+    let lineItems = inv && inv.items?.length
+      ? JSON.parse(JSON.stringify(inv.items))
+      : [{ description: '', qty: 1, unitPrice: 0, vatRate: 23 }];
+
+    const projects = DB.projects().filter(p => p.status !== 'draft');
+    const clients  = DB.clients();
+    const autoNum  = inv ? inv.invoiceNumber : DB.nextInvoiceNumber(type);
+    const isInv    = type === 'invoice';
+    const today    = new Date().toISOString().split('T')[0];
+    const due30    = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+
+    const projOptions = projects.map(p =>
+      `<option value="${p.id}" ${inv?.projectId === p.id ? 'selected' : ''}>${p.name}</option>`
+    ).join('');
+    const clientOptions = clients.map(c =>
+      `<option value="${c.id}" ${inv?.clientId === c.id ? 'selected' : ''}>${c.name}</option>`
+    ).join('');
+    const vatOpts = ['0','6','13','23'].map(r =>
+      `<option value="${r}" ${String(lineItems[0]?.vatRate) === r ? 'selected' : ''}>${r}%</option>`
+    ).join('');
+
+    UI.openModal(inv ? `Edit ${isInv?'Invoice':'Credit Note'}` : `New ${isInv?'Invoice':'Credit Note'}`, `
+      <form id="form-a10inv">
+        <div class="form-row">
+          <div class="form-field">
+            <label>Document Number</label>
+            <input name="invoiceNumber" value="${autoNum}" required>
+          </div>
+          <div class="form-field">
+            <label>Status</label>
+            <select name="status">
+              <option value="draft"     ${(inv?.status||'draft')==='draft'     ? 'selected' : ''}>Draft</option>
+              <option value="sent"      ${inv?.status==='sent'      ? 'selected' : ''}>Sent</option>
+              <option value="paid"      ${inv?.status==='paid'      ? 'selected' : ''}>Paid</option>
+              <option value="cancelled" ${inv?.status==='cancelled' ? 'selected' : ''}>Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Date *</label>
+            <input name="date" type="date" required value="${inv?.date || today}">
+          </div>
+          <div class="form-field">
+            <label>Due Date</label>
+            <input name="dueDate" type="date" value="${inv?.dueDate || due30}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Project</label>
+            <select name="projectId" id="inv-project-sel">
+              <option value="">— select project —</option>
+              ${projOptions}
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Client *</label>
+            <select name="clientId" id="inv-client-sel" required>
+              <option value="">— select client —</option>
+              ${clientOptions}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-section-title" style="margin-top:8px">Line Items</div>
+        <div id="inv-items-wrap"></div>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-add-inv-item" style="margin-bottom:12px">+ Add line</button>
+
+        <div class="inv-totals-preview">
+          <div class="inv-tot-row"><span>Subtotal</span><span id="inv-sub">€0</span></div>
+          <div class="inv-tot-row"><span>VAT</span><span id="inv-vat">€0</span></div>
+          <div class="inv-tot-row inv-tot-total"><span>TOTAL</span><span id="inv-tot">€0</span></div>
+        </div>
+
+        <div class="form-field" style="margin-top:12px">
+          <label>Notes</label>
+          <textarea name="notes" rows="2">${inv?.notes || ''}</textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button type="button" class="btn btn-secondary" id="inv-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">${inv ? 'Save Changes' : (isInv ? 'Create Invoice' : 'Create Credit Note')}</button>
+        </div>
+      </form>
+    `, true);
+
+    /* helpers */
+    const renderTotals = () => {
+      const { subtotal, vatAmount, total } = calcInvTotals(lineItems);
+      document.getElementById('inv-sub').textContent = fmt(subtotal);
+      document.getElementById('inv-vat').textContent = fmt(vatAmount);
+      document.getElementById('inv-tot').textContent = fmt(total);
+    };
+
+    const renderItems = () => {
+      const wrap = document.getElementById('inv-items-wrap');
+      wrap.innerHTML = `
+        <div class="inv-items-table">
+          <div class="inv-items-head">
+            <span class="inv-col-desc">Description</span>
+            <span class="inv-col-num">Qty</span>
+            <span class="inv-col-num">Unit Price (€)</span>
+            <span class="inv-col-vat">VAT %</span>
+            <span class="inv-col-num">Amount</span>
+            <span class="inv-col-del"></span>
+          </div>
+          ${lineItems.map((it, idx) => `
+            <div class="inv-items-row" data-idx="${idx}">
+              <input class="inv-inp inv-col-desc" data-field="description" data-idx="${idx}" value="${it.description || ''}">
+              <input class="inv-inp inv-col-num" type="number" data-field="qty" data-idx="${idx}" value="${it.qty || 1}" min="0.01" step="0.01">
+              <input class="inv-inp inv-col-num" type="number" data-field="unitPrice" data-idx="${idx}" value="${it.unitPrice || 0}" min="0" step="0.01">
+              <select class="inv-inp inv-col-vat" data-field="vatRate" data-idx="${idx}">
+                ${['0','6','13','23'].map(r => `<option value="${r}" ${String(it.vatRate)===r?'selected':''}>${r}%</option>`).join('')}
+              </select>
+              <span class="inv-col-num inv-line-total">${fmt((parseFloat(it.qty)||0)*(parseFloat(it.unitPrice)||0))}</span>
+              ${lineItems.length > 1 ? `<button type="button" class="btn btn-danger btn-sm inv-col-del" data-remove="${idx}">✕</button>` : '<span class="inv-col-del"></span>'}
+            </div>
+          `).join('')}
+        </div>`;
+
+      wrap.querySelectorAll('.inv-inp').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const i = parseInt(inp.dataset.idx);
+          lineItems[i][inp.dataset.field] = inp.value;
+          const lineTotal = (parseFloat(lineItems[i].qty)||0) * (parseFloat(lineItems[i].unitPrice)||0);
+          const row = wrap.querySelector(`[data-idx="${i}"]`);
+          row?.querySelector('.inv-line-total')?.textContent !== undefined &&
+            (row.querySelector('.inv-line-total').textContent = fmt(lineTotal));
+          renderTotals();
+        });
+      });
+      wrap.querySelectorAll('[data-remove]').forEach(btn => {
+        btn.addEventListener('click', () => { lineItems.splice(parseInt(btn.dataset.remove), 1); renderItems(); renderTotals(); });
+      });
+    };
+
+    renderItems();
+    renderTotals();
+
+    /* auto-select client from project */
+    document.getElementById('inv-project-sel')?.addEventListener('change', e => {
+      const proj = DB.projectById(e.target.value);
+      if (!proj) return;
+      const cl = DB.clients().find(c => c.name === proj.client || c.id === proj.clientId);
+      if (cl) document.getElementById('inv-client-sel').value = cl.id;
+    });
+
+    document.getElementById('btn-add-inv-item').addEventListener('click', () => {
+      lineItems.push({ description: '', qty: 1, unitPrice: 0, vatRate: 23 });
+      renderItems(); renderTotals();
+    });
+
+    document.getElementById('inv-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('form-a10inv').addEventListener('submit', e => {
+      e.preventDefault();
+      const fd   = new FormData(e.target);
+      const data = Object.fromEntries(fd);
+      if (!data.clientId) { UI.toast('Please select a client.', 'default'); return; }
+      data.type  = type;
+      data.items = lineItems.map(it => ({
+        description: it.description,
+        qty:       parseFloat(it.qty)       || 0,
+        unitPrice: parseFloat(it.unitPrice) || 0,
+        vatRate:   parseFloat(it.vatRate)   || 0,
+      }));
+      const { subtotal, vatAmount, total } = calcInvTotals(data.items);
+      data.subtotal  = subtotal;
+      data.vatAmount = vatAmount;
+      data.total     = total;
+
+      const list = DB.a10Invoices();
+      if (inv) {
+        const idx = list.findIndex(i => i.id === invId);
+        list[idx] = { ...inv, ...data };
+      } else {
+        list.push({ ...data, id: 'ainv-' + DB.uid(), createdAt: new Date().toISOString(), createdBy: Auth.current()?.name || 'A10' });
+      }
+      DB.saveA10Invoices(list);
+      UI.closeModal();
+      UI.toast(inv ? 'Document updated.' : `${isInv ? 'Invoice' : 'Credit note'} created.`, 'success');
+      FinanceView.render();
+    });
+  },
+};
+
+/* ── A10 Settings Modal ────────────────────────────────────── */
+
+const A10SettingsModal = {
+  open() {
+    const s = DB.a10Settings();
+    UI.openModal('A10 Company Settings', `
+      <form id="form-a10set">
+        <div class="form-section-title">Company Identity</div>
+        <div class="form-row">
+          <div class="form-field"><label>Company Name *</label><input name="name" required value="${s.name || ''}"></div>
+          <div class="form-field"><label>NIF / Tax Number</label><input name="nif" value="${s.nif || ''}" placeholder="PT123456789"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-field"><label>Email</label><input name="email" type="email" value="${s.email || ''}"></div>
+          <div class="form-field"><label>Phone</label><input name="phone" value="${s.phone || ''}"></div>
+        </div>
+        <div class="form-section-title" style="margin-top:14px">Address</div>
+        <div class="form-field"><label>Street Address</label><input name="address" value="${s.address || ''}"></div>
+        <div class="form-row">
+          <div class="form-field"><label>City</label><input name="city" value="${s.city || ''}"></div>
+          <div class="form-field"><label>Postal Code</label><input name="postalCode" value="${s.postalCode || ''}"></div>
+        </div>
+        <div class="form-field"><label>Country</label><input name="country" value="${s.country || 'Portugal'}"></div>
+        <div class="form-section-title" style="margin-top:14px">Banking & Payment</div>
+        <div class="form-row">
+          <div class="form-field"><label>IBAN</label><input name="iban" value="${s.iban || ''}" placeholder="PT50 0000 0000…"></div>
+          <div class="form-field"><label>BIC / SWIFT</label><input name="bic" value="${s.bic || ''}"></div>
+        </div>
+        <div class="form-field"><label>Default Payment Terms</label><input name="paymentTerms" value="${s.paymentTerms || '30 days net'}" placeholder="e.g. 30 days net"></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+          <button type="button" class="btn btn-secondary" id="a10set-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Settings</button>
+        </div>
+      </form>
+    `, true);
+    document.getElementById('a10set-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('form-a10set').addEventListener('submit', e => {
+      e.preventDefault();
+      DB.saveA10Settings(Object.fromEntries(new FormData(e.target)));
+      UI.closeModal();
+      UI.toast('A10 settings saved.', 'success');
+    });
+  },
+};
+
+/* ── Invoice Document Generator ───────────────────────────── */
+
+const InvoiceDocGenerator = {
+  preview(inv) {
+    const a10    = DB.a10Settings();
+    const client = DB.clients().find(c => c.id === inv.clientId) || {};
+    const proj   = DB.projectById(inv.projectId);
+    const isInv  = inv.type === 'invoice';
+    const typeLabel = isInv ? 'INVOICE' : 'CREDIT NOTE';
+    const billingName = client.billingName || client.name || '—';
+    const { subtotal, vatAmount, total } = calcInvTotals(inv.items || []);
+
+    const html = `
+      <div class="inv-doc">
+        <div class="inv-doc-header">
+          <div class="inv-doc-brand">
+            <div class="inv-brand-mark">A10</div>
+            <div class="inv-brand-sub">Consulting</div>
+          </div>
+          <div class="inv-doc-meta">
+            <div class="inv-doc-type-label">${typeLabel}</div>
+            <div class="inv-doc-num">${inv.invoiceNumber}</div>
+            <table class="inv-meta-tbl">
+              <tr><td>Date</td><td>${fmtDate(inv.date)}</td></tr>
+              ${inv.dueDate ? `<tr><td>Due Date</td><td>${fmtDate(inv.dueDate)}</td></tr>` : ''}
+              ${proj ? `<tr><td>Project</td><td>${proj.name}</td></tr>` : ''}
+            </table>
+          </div>
+        </div>
+
+        <div class="inv-parties">
+          <div class="inv-party">
+            <div class="inv-party-label">From</div>
+            <div class="inv-party-name">${a10.name || 'A10 Consulting'}</div>
+            ${a10.address ? `<div>${a10.address}</div>` : ''}
+            ${a10.city ? `<div>${a10.postalCode ? a10.postalCode + ' ' : ''}${a10.city}${a10.country ? ', ' + a10.country : ''}</div>` : ''}
+            ${a10.nif ? `<div>NIF: ${a10.nif}</div>` : ''}
+            ${a10.email ? `<div>${a10.email}</div>` : ''}
+            ${a10.phone ? `<div>${a10.phone}</div>` : ''}
+          </div>
+          <div class="inv-party inv-party-to">
+            <div class="inv-party-label">Bill To</div>
+            <div class="inv-party-name">${billingName}</div>
+            ${client.billingAddress ? `<div>${client.billingAddress}</div>` : ''}
+            ${client.billingCity ? `<div>${client.billingPostalCode ? client.billingPostalCode + ' ' : ''}${client.billingCity}${(client.billingCountry || client.country) ? ', ' + (client.billingCountry || client.country) : ''}</div>` : ''}
+            ${client.vatNumber ? `<div>VAT/NIF: ${client.vatNumber}</div>` : ''}
+            ${client.email ? `<div>${client.email}</div>` : ''}
+          </div>
+        </div>
+
+        <table class="inv-items-tbl">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th class="inv-r">Qty</th>
+              <th class="inv-r">Unit Price</th>
+              <th class="inv-r">VAT %</th>
+              <th class="inv-r">VAT</th>
+              <th class="inv-r">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(inv.items || []).map(it => {
+              const lineSub = (parseFloat(it.qty)||0) * (parseFloat(it.unitPrice)||0);
+              const lineVat = lineSub * (parseFloat(it.vatRate)||0) / 100;
+              return `<tr>
+                <td>${it.description || ''}</td>
+                <td class="inv-r">${it.qty}</td>
+                <td class="inv-r">${fmt(it.unitPrice)}</td>
+                <td class="inv-r">${it.vatRate}%</td>
+                <td class="inv-r">${fmt(lineVat)}</td>
+                <td class="inv-r">${fmt(lineSub + lineVat)}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+
+        <div class="inv-summary">
+          <table class="inv-summary-tbl">
+            <tr><td>Subtotal</td><td class="inv-r">${fmt(subtotal)}</td></tr>
+            <tr><td>VAT</td><td class="inv-r">${fmt(vatAmount)}</td></tr>
+            <tr class="inv-summary-total"><td>TOTAL</td><td class="inv-r">${fmt(total)}</td></tr>
+          </table>
+        </div>
+
+        ${a10.iban ? `<div class="inv-payment"><strong>Payment:</strong> IBAN ${a10.iban}${a10.bic ? ' &nbsp;|&nbsp; BIC/SWIFT: ' + a10.bic : ''}</div>` : ''}
+        ${a10.paymentTerms ? `<div class="inv-terms"><strong>Payment Terms:</strong> ${a10.paymentTerms}</div>` : ''}
+        ${client.paymentTerms && client.paymentTerms !== a10.paymentTerms ? `<div class="inv-terms">Client terms: ${client.paymentTerms}</div>` : ''}
+        ${inv.notes ? `<div class="inv-notes">${inv.notes}</div>` : ''}
+      </div>`;
+
+    UI.openDocPreview(`${typeLabel} ${inv.invoiceNumber}`, html);
   },
 };
 
