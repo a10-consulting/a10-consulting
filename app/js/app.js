@@ -126,16 +126,16 @@ const SEED = {
     { id: 't20', projectId: 'proj-4', name: 'Results Validation',      phase: 'Deliver',  assignee: 'Ricardo Ferreira', startDate: '2025-12-01', dueDate: '2025-12-31', status: 'completed', percentDone: 100 },
   ],
   actionItems: [
-    { id: 'a1',  projectId: 'proj-1', description: 'Finalise contractor renegotiation terms with primary drilling contractor', owner: 'Alexandre Costa', dueDate: '2026-04-30', priority: 'high',     status: 'in-progress', notes: 'Draft terms circulated, awaiting client sign-off' },
-    { id: 'a2',  projectId: 'proj-1', description: 'Obtain updated HSEC approval for revised site processes',                owner: 'Alexandre Costa', dueDate: '2026-05-15', priority: 'critical',  status: 'open',        notes: '' },
-    { id: 'a3',  projectId: 'proj-1', description: 'Present cost model to CFO before next board meeting',                   owner: 'Sofia Martins',    dueDate: '2026-05-01', priority: 'high',     status: 'open',        notes: 'Board meeting scheduled 7 May' },
-    { id: 'a4',  projectId: 'proj-1', description: 'Update project schedule for Phase 3 delay',                             owner: 'Alexandre Costa', dueDate: '2026-04-25', priority: 'medium',   status: 'done',        notes: '' },
-    { id: 'a5',  projectId: 'proj-2', description: 'Confirm shortlisted vendor contracts for review',                       owner: 'Sofia Martins',    dueDate: '2026-03-31', priority: 'high',     status: 'done',        notes: '4 vendors confirmed' },
-    { id: 'a6',  projectId: 'proj-2', description: 'Submit interim results to client steering committee',                   owner: 'Sofia Martins',    dueDate: '2026-04-05', priority: 'high',     status: 'in-progress', notes: '' },
-    { id: 'a7',  projectId: 'proj-2', description: 'Align logistics KPIs with client operations team',                      owner: 'Ricardo Ferreira', dueDate: '2026-04-20', priority: 'medium',   status: 'open',        notes: '' },
-    { id: 'a8',  projectId: 'proj-3', description: 'Obtain client approval on governance framework document',               owner: 'Alexandre Costa', dueDate: '2026-04-15', priority: 'critical',  status: 'open',        notes: 'Project on hold pending this approval' },
-    { id: 'a9',  projectId: 'proj-3', description: 'Complete risk register for Phase 2',                                    owner: 'Ricardo Ferreira', dueDate: '2026-03-31', priority: 'high',     status: 'in-progress', notes: '' },
-    { id: 'a10', projectId: 'proj-3', description: 'Schedule kick-off meeting with main contractor',                        owner: 'Alexandre Costa', dueDate: '2026-04-30', priority: 'medium',   status: 'open',        notes: '' },
+    { id: 'a1',  projectId: 'proj-1', scope: 'Commercial',       description: 'Finalise contractor renegotiation terms with primary drilling contractor', details: 'Three contractors in scope. Apex Drilling is priority.', owner: 'Alexandre Costa', startDate: '2026-04-01', dueDate: '2026-04-30', priority: 'high',     status: 'in-progress', operationalImpact: 'Cost reduction of ~8% on drilling line', comments: 'Draft terms circulated, awaiting client sign-off' },
+    { id: 'a2',  projectId: 'proj-1', scope: 'Compliance',       description: 'Obtain updated HSEC approval for revised site processes',                owner: 'Alexandre Costa', startDate: '2026-04-15', dueDate: '2026-05-15', priority: 'critical',  status: 'open',        operationalImpact: 'Blocks Phase 3 execution start',         comments: '' },
+    { id: 'a3',  projectId: 'proj-1', scope: 'Reporting',        description: 'Present cost model to CFO before next board meeting',                   owner: 'Sofia Martins',    startDate: '2026-04-20', dueDate: '2026-05-01', priority: 'high',     status: 'open',        operationalImpact: 'Board approval required for Phase 3',    comments: 'Board meeting scheduled 7 May' },
+    { id: 'a4',  projectId: 'proj-1', scope: 'Planning',         description: 'Update project schedule for Phase 3 delay',                             owner: 'Alexandre Costa', startDate: '2026-04-10', dueDate: '2026-04-25', priority: 'medium',   status: 'done',        operationalImpact: 'Schedule baseline refresh',              comments: 'Completed and distributed to team' },
+    { id: 'a5',  projectId: 'proj-2', scope: 'Procurement',      description: 'Confirm shortlisted vendor contracts for review',                       owner: 'Sofia Martins',    startDate: '2026-03-15', dueDate: '2026-03-31', priority: 'high',     status: 'done',        operationalImpact: 'Vendor rationalisation from 14 to 4',    comments: '4 vendors confirmed and notified' },
+    { id: 'a6',  projectId: 'proj-2', scope: 'Reporting',        description: 'Submit interim results to client steering committee',                   owner: 'Sofia Martins',    startDate: '2026-03-28', dueDate: '2026-04-05', priority: 'high',     status: 'in-progress', operationalImpact: 'Steering committee buy-in for Phase 3',  comments: '' },
+    { id: 'a7',  projectId: 'proj-2', scope: 'Operations',       description: 'Align logistics KPIs with client operations team',                      owner: 'Ricardo Ferreira', startDate: '2026-04-05', dueDate: '2026-04-20', priority: 'medium',   status: 'open',        operationalImpact: 'KPI framework for WMS go-live',          comments: '' },
+    { id: 'a8',  projectId: 'proj-3', scope: 'Governance',       description: 'Obtain client approval on governance framework document',               owner: 'Alexandre Costa', startDate: '2026-04-01', dueDate: '2026-04-15', priority: 'critical',  status: 'open',        operationalImpact: 'Project unblocked once approved',        comments: 'Project on hold pending this approval' },
+    { id: 'a9',  projectId: 'proj-3', scope: 'Risk Management',  description: 'Complete risk register for Phase 2',                                    owner: 'Ricardo Ferreira', startDate: '2026-03-15', dueDate: '2026-03-31', priority: 'high',     status: 'in-progress', operationalImpact: 'Required for contractor mobilisation',   comments: '' },
+    { id: 'a10', projectId: 'proj-3', scope: 'Mobilisation',     description: 'Schedule kick-off meeting with main contractor',                        owner: 'Alexandre Costa', startDate: '2026-04-20', dueDate: '2026-04-30', priority: 'medium',   status: 'open',        operationalImpact: 'Contractor on-site readiness',           comments: '' },
   ],
   budgetItems: [
     /* proj-1 */
@@ -232,6 +232,7 @@ const DB = {
   documents()    { return this.get('documents')     || []; },
   clients()      { return this.get('clients')       || []; },
   suppliers()    { return this.get('suppliers')     || []; },
+  users()        { return this.get('users')         || USERS; },
 
   saveProjects(arr)     { this.set('projects', arr); },
   saveTasks(arr)        { this.set('tasks', arr); },
@@ -240,6 +241,7 @@ const DB = {
   saveDocuments(arr)    { this.set('documents', arr); },
   saveClients(arr)      { this.set('clients', arr); },
   saveSuppliers(arr)    { this.set('suppliers', arr); },
+  saveUsers(arr)        { this.set('users', arr); },
 
   projectById(id)  { return this.projects().find(p => p.id === id); },
 
@@ -276,6 +278,7 @@ const DB = {
     this.saveDocuments(SEED.documents);
     this.saveClients(SEED.clients);
     this.saveSuppliers(SEED.suppliers);
+    this.saveUsers(USERS);
     this.set('seeded', true);
   },
 };
@@ -286,7 +289,7 @@ const Auth = {
   _key: 'a10proj_session',
 
   login(email, password) {
-    const user = USERS.find(u =>
+    const user = DB.users().find(u =>
       u.email.toLowerCase() === email.toLowerCase() && u.password === password
     );
     if (!user) return false;
@@ -483,8 +486,7 @@ const Router = {
     } else if (route === 'active-projects') {
       UI.setTitle('Active Projects', 'A10 Projects');
       UI.setHeaderActions('<button class="btn btn-primary" id="btn-new-project">+ New Project</button>');
-      Dashboard.filter = 'active';
-      Dashboard.render();
+      ActiveProjectsView.render();
       document.getElementById('btn-new-project')?.addEventListener('click', () => ProjectModal.open());
     } else if (route === 'project') {
       const proj = DB.projectById(param);
@@ -520,6 +522,77 @@ const Router = {
     document.querySelectorAll('.nav-item').forEach(el => {
       el.classList.toggle('active', el.dataset.route === route);
     });
+  },
+};
+
+/* ── Active Projects View ──────────────────────────────────── */
+
+const ActiveProjectsView = {
+  render() {
+    const projects = DB.projects().filter(p => p.status === 'active');
+    const wrap = document.getElementById('main-content');
+
+    if (!projects.length) {
+      wrap.innerHTML = `<div class="empty-state" style="margin-top:40px"><div class="empty-state-icon">🟢</div><p>No active projects at the moment.</p></div>`;
+      return;
+    }
+
+    wrap.innerHTML = `
+      <div class="section-card">
+        <div class="section-card-header">
+          <h3>${projects.length} Active Project${projects.length !== 1 ? 's' : ''}</h3>
+          <input class="search-box" id="active-search" placeholder="Search..." style="width:200px">
+        </div>
+        <div id="active-table-wrap"></div>
+      </div>
+    `;
+
+    const render = (search = '') => {
+      const q = search.toLowerCase();
+      const list = q ? projects.filter(p =>
+        p.name.toLowerCase().includes(q) || p.client.toLowerCase().includes(q) || p.lead.toLowerCase().includes(q)
+      ) : projects;
+
+      document.getElementById('active-table-wrap').innerHTML = list.length ? `
+        <table class="data-table">
+          <thead>
+            <tr><th>Project / Client</th><th>Sector</th><th>Lead</th><th>Completion</th><th>Budget Used</th><th>Deadline</th><th></th></tr>
+          </thead>
+          <tbody>
+            ${list.map(p => {
+              const pct = DB.projectCompletion(p.id);
+              const planned = DB.projectPlanned(p.id);
+              const spent = DB.projectSpent(p.id);
+              const budgetPct = planned ? Math.round(spent / planned * 100) : 0;
+              return `<tr>
+                <td>
+                  <div class="project-name-cell">
+                    <span class="project-name-link" data-project="${p.id}">${p.name}</span>
+                    <span class="project-client">${p.client}</span>
+                  </div>
+                </td>
+                <td><span style="font-size:12px;color:var(--mid)">${p.sector}</span></td>
+                <td style="font-size:13px;white-space:nowrap">${p.lead}</td>
+                <td style="min-width:120px">${progressBar(pct)}</td>
+                <td style="font-size:13px;white-space:nowrap">
+                  ${fmt(spent)} / ${fmt(planned || p.budget)}
+                  <div style="margin-top:4px">${progressBar(budgetPct)}</div>
+                </td>
+                <td style="font-size:12px;color:var(--mid);white-space:nowrap">${fmtDate(p.endDate)}</td>
+                <td><button class="btn btn-secondary btn-sm" data-project="${p.id}">Open</button></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      ` : `<div class="empty-state"><p>No projects match your search.</p></div>`;
+
+      document.getElementById('active-table-wrap').querySelectorAll('[data-project]').forEach(el => {
+        el.addEventListener('click', () => Router.go('project', el.dataset.project));
+      });
+    };
+
+    render();
+    document.getElementById('active-search')?.addEventListener('input', e => render(e.target.value));
   },
 };
 
@@ -947,11 +1020,19 @@ const ProjectView = {
     let filterStatus = 'all';
     let filterPriority = 'all';
 
+    function daysCounter(a) {
+      if (a.status === 'done') return '<span style="color:#16a34a;font-weight:700">✓</span>';
+      if (!a.dueDate) return '—';
+      const diff = Math.round((parseDate(a.dueDate) - new Date()) / 86400000);
+      if (diff < 0) return `<span style="color:#dc2626;font-weight:700">${Math.abs(diff)}d overdue</span>`;
+      if (diff === 0) return `<span style="color:#f59e0b;font-weight:700">Today</span>`;
+      return `<span style="color:${diff <= 7 ? '#f59e0b' : 'var(--mid)'}">${diff}d</span>`;
+    }
+
     const render = () => {
       let list = all;
       if (filterStatus !== 'all')   list = list.filter(a => a.status === filterStatus);
       if (filterPriority !== 'all') list = list.filter(a => a.priority === filterPriority);
-
       const overdueCount = list.filter(a => a.status !== 'done' && isOverdue(a.dueDate)).length;
 
       tc.innerHTML = `
@@ -972,26 +1053,39 @@ const ProjectView = {
         </div>
         ${overdueCount > 0 ? `<div style="background:#fee2e2;border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-size:13px;color:#dc2626;font-weight:700">⚠ ${overdueCount} overdue action(s)</div>` : ''}
         ${list.length ? `
-          <div class="section-card">
-            <table class="data-table">
+          <div class="section-card" style="overflow-x:auto">
+            <table class="data-table action-plan-table">
               <thead>
-                <tr><th>#</th><th>Description</th><th>Owner</th><th>Due Date</th><th>Priority</th><th>Status</th><th></th></tr>
+                <tr>
+                  <th style="min-width:100px">Scope</th>
+                  <th style="min-width:200px">Action / Description</th>
+                  <th style="min-width:180px">Details / Context</th>
+                  <th style="min-width:130px">Owner</th>
+                  <th style="min-width:80px">Priority</th>
+                  <th style="min-width:100px">Status</th>
+                  <th style="min-width:90px">Start Date</th>
+                  <th style="min-width:90px">Due Date</th>
+                  <th style="min-width:80px">Days</th>
+                  <th style="min-width:180px">Operational Impact</th>
+                  <th style="min-width:180px">Comments / Next Step</th>
+                  <th style="min-width:80px"></th>
+                </tr>
               </thead>
               <tbody>
-                ${list.map((a, i) => {
+                ${list.map(a => {
                   const overdue = a.status !== 'done' && isOverdue(a.dueDate);
                   return `<tr ${overdue ? 'style="background:#fff5f5"' : ''}>
-                    <td style="color:var(--mid);font-size:12px">${i + 1}</td>
-                    <td style="font-weight:600;max-width:280px">
-                      ${a.description}
-                      ${a.notes ? `<div style="font-size:12px;color:var(--mid);font-weight:400;margin-top:2px">${a.notes}</div>` : ''}
-                    </td>
-                    <td style="font-size:13px;white-space:nowrap">${a.owner}</td>
-                    <td style="font-size:12px;white-space:nowrap;${overdue ? 'color:#dc2626;font-weight:700' : 'color:var(--mid)'}">
-                      ${fmtDate(a.dueDate)}${overdue ? ' ⚠' : ''}
-                    </td>
+                    <td style="font-size:12px;font-weight:700;white-space:nowrap">${a.scope || '—'}</td>
+                    <td style="font-weight:600;max-width:200px">${a.description}</td>
+                    <td style="font-size:12px;color:var(--mid);max-width:180px">${a.details || '—'}</td>
+                    <td style="font-size:12px;white-space:nowrap">${a.owner}</td>
                     <td>${priorityBadge(a.priority)}</td>
                     <td>${actionStatusBadge(a.status)}</td>
+                    <td style="font-size:12px;color:var(--mid);white-space:nowrap">${fmtDate(a.startDate) || '—'}</td>
+                    <td style="font-size:12px;white-space:nowrap;${overdue ? 'color:#dc2626;font-weight:700' : 'color:var(--mid)'}">${fmtDate(a.dueDate)}${overdue ? ' ⚠' : ''}</td>
+                    <td style="text-align:center">${daysCounter(a)}</td>
+                    <td style="font-size:12px;color:var(--mid);max-width:180px">${a.operationalImpact || '—'}</td>
+                    <td style="font-size:12px;color:var(--mid);max-width:180px">${a.comments || a.notes || '—'}</td>
                     <td>
                       <div class="actions-cell">
                         <button class="btn btn-secondary btn-sm" data-edit-action="${a.id}">Edit</button>
@@ -1107,50 +1201,114 @@ const ProjectView = {
 
   /* ── Tab: Documents ── */
   _renderDocuments(proj, tc) {
-    const docs = DB.documents().filter(d => d.projectId === proj.id);
+    const refresh = () => this._renderTab(proj.id);
 
-    tc.innerHTML = `
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
-        <div style="flex:1;min-width:260px">
-          <div style="font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--mid);margin-bottom:12px">Generated Documents (${docs.length})</div>
-          ${docs.length ? `
-            <div class="doc-grid">
-              ${docs.map(d => `
-                <div class="doc-card" data-view-doc="${d.id}">
-                  <div class="doc-card-type">${DOC_TYPES[d.type]?.icon} ${DOC_TYPES[d.type]?.label || d.type}</div>
-                  <div class="doc-card-title">${d.title}</div>
-                  <div class="doc-card-date">${fmtDate(d.createdAt)} · ${d.createdBy}</div>
+    const renderDocs = () => {
+      const docs = DB.documents().filter(d => d.projectId === proj.id);
+
+      tc.innerHTML = `
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:260px">
+            <div style="font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--mid);margin-bottom:12px">Documents (${docs.length})</div>
+            ${docs.length ? `
+              <div class="doc-grid">
+                ${docs.map(d => `
+                  <div class="doc-card-wrap" style="position:relative">
+                    <div class="doc-card" data-view-doc="${d.id}" style="cursor:pointer">
+                      <div class="doc-card-type">${d.type === 'pdf' ? '📎 PDF Import' : (DOC_TYPES[d.type]?.icon + ' ' + (DOC_TYPES[d.type]?.label || d.type))}</div>
+                      <div class="doc-card-title">${d.title}</div>
+                      <div class="doc-card-date">${fmtDate(d.createdAt)} · ${d.createdBy || '—'}</div>
+                    </div>
+                    <button class="doc-delete-btn" data-delete-doc="${d.id}" title="Delete document">✕</button>
+                  </div>
+                `).join('')}
+              </div>
+            ` : `<div class="empty-state" style="padding:32px 0"><p style="font-size:13px">No documents yet.</p></div>`}
+          </div>
+          <div style="flex-shrink:0;min-width:220px">
+            <div style="font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--mid);margin-bottom:12px">Generate Document</div>
+            <div class="template-grid" style="grid-template-columns:1fr">
+              ${Object.entries(DOC_TYPES).map(([type, info]) => `
+                <div class="template-card" data-new-doc="${type}">
+                  <div class="template-icon">${info.icon}</div>
+                  <div class="template-name">${info.label}</div>
                 </div>
               `).join('')}
             </div>
-          ` : `<div class="empty-state" style="padding:32px 0"><p style="font-size:13px">No documents generated yet.</p></div>`}
-        </div>
-        <div style="flex-shrink:0;min-width:220px">
-          <div style="font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--mid);margin-bottom:12px">Generate Document</div>
-          <div class="template-grid" style="grid-template-columns:1fr">
-            ${Object.entries(DOC_TYPES).map(([type, info]) => `
-              <div class="template-card" data-new-doc="${type}">
-                <div class="template-icon">${info.icon}</div>
-                <div class="template-name">${info.label}</div>
-              </div>
-            `).join('')}
+            <div style="margin-top:12px">
+              <div style="font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--mid);margin-bottom:8px">Import PDF</div>
+              <label class="btn btn-secondary btn-sm" style="cursor:pointer;display:inline-block">
+                📎 Choose PDF file
+                <input type="file" accept=".pdf" id="pdf-import-input" style="display:none">
+              </label>
+              <div style="font-size:11px;color:var(--mid);margin-top:6px">Max recommended: 2 MB</div>
+            </div>
           </div>
         </div>
-      </div>
-    `;
+      `;
 
-    tc.querySelectorAll('[data-view-doc]').forEach(el => {
-      el.addEventListener('click', () => {
-        const doc = DB.documents().find(d => d.id === el.dataset.viewDoc);
-        if (doc) DocGenerator.preview(doc, proj);
+      tc.querySelectorAll('[data-view-doc]').forEach(el => {
+        el.addEventListener('click', () => {
+          const doc = DB.documents().find(d => d.id === el.dataset.viewDoc);
+          if (!doc) return;
+          if (doc.type === 'pdf' && doc.fileData) {
+            const byteStr = atob(doc.fileData);
+            const ab = new ArrayBuffer(byteStr.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i);
+            const blob = new Blob([ab], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+          } else {
+            DocGenerator.preview(doc, proj);
+          }
+        });
       });
-    });
 
-    tc.querySelectorAll('[data-new-doc]').forEach(el => {
-      el.addEventListener('click', () => {
-        DocGenerator.openForm(el.dataset.newDoc, proj, () => this._renderTab(proj.id));
+      tc.querySelectorAll('[data-delete-doc]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          if (!UI.confirm('Delete this document?')) return;
+          DB.saveDocuments(DB.documents().filter(d => d.id !== btn.dataset.deleteDoc));
+          UI.toast('Document deleted.', 'default');
+          renderDocs();
+        });
       });
-    });
+
+      tc.querySelectorAll('[data-new-doc]').forEach(el => {
+        el.addEventListener('click', () => {
+          DocGenerator.openForm(el.dataset.newDoc, proj, refresh);
+        });
+      });
+
+      document.getElementById('pdf-import-input')?.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+          UI.toast('File too large. Max 5 MB.', 'default');
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const base64 = ev.target.result.split(',')[1];
+          const doc = {
+            id: 'd' + DB.uid(),
+            projectId: proj.id,
+            type: 'pdf',
+            title: file.name.replace(/\.pdf$/i, ''),
+            fileData: base64,
+            createdAt: new Date().toISOString(),
+            createdBy: Auth.current()?.name || 'A10',
+          };
+          DB.saveDocuments([...DB.documents(), doc]);
+          UI.toast('PDF imported.', 'success');
+          renderDocs();
+        };
+        reader.readAsDataURL(file);
+      });
+    };
+
+    renderDocs();
   },
 };
 
@@ -1191,7 +1349,7 @@ const ProjectModal = {
           <div class="form-field">
             <label>Lead</label>
             <select name="lead">
-              ${USERS.map(u => `<option value="${u.name}" ${proj?.lead === u.name ? 'selected' : ''}>${u.name}</option>`).join('')}
+              ${DB.users().map(u => `<option value="${u.name}" ${proj?.lead === u.name ? 'selected' : ''}>${u.name}</option>`).join('')}
             </select>
           </div>
           <div class="form-field">
@@ -1269,7 +1427,7 @@ const TaskModal = {
           <div class="form-field">
             <label>Assignee</label>
             <select name="assignee">
-              ${USERS.map(u => `<option value="${u.name}" ${task?.assignee === u.name ? 'selected' : ''}>${u.name}</option>`).join('')}
+              ${DB.users().map(u => `<option value="${u.name}" ${task?.assignee === u.name ? 'selected' : ''}>${u.name}</option>`).join('')}
             </select>
           </div>
         </div>
@@ -1331,24 +1489,29 @@ const TaskModal = {
 const ActionModal = {
   open(projectId, actionId, onSave) {
     const action = actionId ? DB.actionItems().find(a => a.id === actionId) : null;
+    const users = DB.users();
 
     const body = `
       <form id="form-action">
-        <div class="form-field">
-          <label>Description *</label>
-          <textarea name="description" rows="3" required>${action?.description || ''}</textarea>
-        </div>
         <div class="form-row">
+          <div class="form-field">
+            <label>Scope</label>
+            <input name="scope" placeholder="e.g. Commercial, Compliance, Risk…" value="${action?.scope || ''}">
+          </div>
           <div class="form-field">
             <label>Owner</label>
             <select name="owner">
-              ${USERS.map(u => `<option value="${u.name}" ${action?.owner === u.name ? 'selected' : ''}>${u.name}</option>`).join('')}
+              ${users.map(u => `<option value="${u.name}" ${action?.owner === u.name ? 'selected' : ''}>${u.name}</option>`).join('')}
             </select>
           </div>
-          <div class="form-field">
-            <label>Due Date *</label>
-            <input name="dueDate" type="date" required value="${action?.dueDate || ''}">
-          </div>
+        </div>
+        <div class="form-field">
+          <label>Action / Description *</label>
+          <textarea name="description" rows="2" required>${action?.description || ''}</textarea>
+        </div>
+        <div class="form-field">
+          <label>Details / Context</label>
+          <textarea name="details" rows="2">${action?.details || ''}</textarea>
         </div>
         <div class="form-row">
           <div class="form-field">
@@ -1364,9 +1527,23 @@ const ActionModal = {
             </select>
           </div>
         </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Start Date</label>
+            <input name="startDate" type="date" value="${action?.startDate || ''}">
+          </div>
+          <div class="form-field">
+            <label>Due Date *</label>
+            <input name="dueDate" type="date" required value="${action?.dueDate || ''}">
+          </div>
+        </div>
         <div class="form-field">
-          <label>Notes</label>
-          <input name="notes" value="${action?.notes || ''}">
+          <label>Operational Impact</label>
+          <input name="operationalImpact" value="${action?.operationalImpact || ''}">
+        </div>
+        <div class="form-field">
+          <label>Comments / Next Step</label>
+          <textarea name="comments" rows="2">${action?.comments || action?.notes || ''}</textarea>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
           <button type="button" class="btn btn-secondary" id="action-cancel">Cancel</button>
@@ -1375,7 +1552,7 @@ const ActionModal = {
       </form>
     `;
 
-    UI.openModal(action ? 'Edit Action' : 'New Action', body);
+    UI.openModal(action ? 'Edit Action' : 'New Action', body, true);
     document.getElementById('action-cancel').addEventListener('click', UI.closeModal.bind(UI));
     document.getElementById('form-action').addEventListener('submit', e => {
       e.preventDefault();
@@ -1788,25 +1965,111 @@ const SuppliersView = {
 const UsersView = {
   render() {
     const session = Auth.current();
+    const users = DB.users();
     document.getElementById('main-content').innerHTML = `
       <div class="section-card">
-        <div class="section-card-header"><h3>Platform Users</h3></div>
+        <div class="section-card-header">
+          <h3>Platform Users (${users.length})</h3>
+          <button class="btn btn-primary btn-sm" id="btn-add-user">+ New User</button>
+        </div>
         <table class="data-table">
-          <thead><tr><th></th><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+          <thead><tr><th></th><th>Name</th><th>Email</th><th>Role</th><th></th></tr></thead>
           <tbody>
-            ${USERS.map(u => `<tr ${u.email === session?.email ? 'style="background:var(--grey)"' : ''}>
-              <td><div style="width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">${u.avatar}</div></td>
+            ${users.map(u => `<tr ${u.email === session?.email ? 'style="background:var(--grey)"' : ''}>
+              <td><div style="width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">${u.avatar || u.name.slice(0,2).toUpperCase()}</div></td>
               <td style="font-weight:700">${u.name}${u.email === session?.email ? ' <span style="font-size:11px;color:var(--mid);font-weight:400">(you)</span>' : ''}</td>
               <td style="font-size:13px">${u.email}</td>
               <td><span class="badge ${u.role === 'admin' ? 'badge-active' : 'badge-in-progress'}">${u.role}</span></td>
+              <td>
+                <div class="actions-cell">
+                  <button class="btn btn-secondary btn-sm" data-edit-user="${u.id}">Edit</button>
+                  ${u.email !== session?.email ? `<button class="btn btn-danger btn-sm" data-delete-user="${u.id}">✕</button>` : ''}
+                </div>
+              </td>
             </tr>`).join('')}
           </tbody>
         </table>
-        <div style="padding:14px 18px;font-size:12px;color:var(--mid);border-top:1px solid var(--border)">
-          User accounts are configured in the application source. Contact your administrator to add or modify users.
-        </div>
       </div>
     `;
+
+    document.getElementById('btn-add-user')?.addEventListener('click', () => UsersView.openModal(null));
+
+    document.querySelectorAll('[data-edit-user]').forEach(btn => {
+      btn.addEventListener('click', () => UsersView.openModal(btn.dataset.editUser));
+    });
+
+    document.querySelectorAll('[data-delete-user]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!UI.confirm('Delete this user?')) return;
+        const updated = DB.users().filter(u => String(u.id) !== String(btn.dataset.deleteUser));
+        DB.saveUsers(updated);
+        UI.toast('User deleted.', 'default');
+        UsersView.render();
+      });
+    });
+  },
+
+  openModal(userId) {
+    const users = DB.users();
+    const user = userId ? users.find(u => String(u.id) === String(userId)) : null;
+
+    UI.openModal(user ? 'Edit User' : 'New User', `
+      <form id="form-user">
+        <div class="form-row">
+          <div class="form-field">
+            <label>Full Name *</label>
+            <input name="name" required value="${user?.name || ''}">
+          </div>
+          <div class="form-field">
+            <label>Avatar Initials</label>
+            <input name="avatar" maxlength="2" placeholder="e.g. AC" value="${user?.avatar || ''}">
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Email *</label>
+          <input name="email" type="email" required value="${user?.email || ''}">
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Password *</label>
+            <input name="password" type="password" ${user ? '' : 'required'} placeholder="${user ? 'Leave blank to keep current' : ''}">
+          </div>
+          <div class="form-field">
+            <label>Role</label>
+            <select name="role">
+              <option value="consultant" ${user?.role === 'consultant' ? 'selected' : ''}>Consultant</option>
+              <option value="admin" ${user?.role === 'admin' ? 'selected' : ''}>Admin</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button type="button" class="btn btn-secondary" id="user-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">${user ? 'Save Changes' : 'Create User'}</button>
+        </div>
+      </form>
+    `);
+
+    document.getElementById('user-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('form-user').addEventListener('submit', e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const data = Object.fromEntries(fd);
+
+      if (!data.avatar) data.avatar = data.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+      const list = DB.users();
+      if (user) {
+        const idx = list.findIndex(u => String(u.id) === String(userId));
+        list[idx] = { ...user, ...data, password: data.password || user.password };
+      } else {
+        if (!data.password) { UI.toast('Password is required.', 'default'); return; }
+        list.push({ ...data, id: DB.uid() });
+      }
+      DB.saveUsers(list);
+      UI.closeModal();
+      UI.toast(user ? 'User updated.' : 'User created.', 'success');
+      UsersView.render();
+    });
   },
 };
 
