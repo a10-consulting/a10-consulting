@@ -53,6 +53,7 @@ const SEED = {
       sector: 'Mining & Exploration',
       status: 'active',
       lead: 'Alexandre Costa',
+      memberIds: [1, 2],
       startDate: '2026-01-15',
       endDate: '2026-06-30',
       budget: 250000,
@@ -66,6 +67,7 @@ const SEED = {
       sector: 'Supply Chain & Logistics',
       status: 'active',
       lead: 'Sofia Martins',
+      memberIds: [2, 3],
       startDate: '2025-11-01',
       endDate: '2026-04-30',
       budget: 180000,
@@ -79,6 +81,7 @@ const SEED = {
       sector: 'Operations & Infrastructure',
       status: 'on-hold',
       lead: 'Alexandre Costa',
+      memberIds: [1, 3],
       startDate: '2026-02-01',
       endDate: '2026-12-31',
       budget: 420000,
@@ -92,6 +95,7 @@ const SEED = {
       sector: 'Performance & Cost Transformation',
       status: 'completed',
       lead: 'Ricardo Ferreira',
+      memberIds: [3],
       startDate: '2025-08-01',
       endDate: '2025-12-31',
       budget: 160000,
@@ -1069,7 +1073,10 @@ const ProjectView = {
         </div>
         <div class="info-card">
           <div class="info-card-label">Lead</div>
-          <div class="info-card-value">${proj.lead}</div>
+          <div class="info-card-value" style="display:flex;align-items:center;gap:8px">
+            ${(() => { const u = DB.users().find(x => x.name === proj.lead); return u ? `<span style="width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${u.avatar||u.name.slice(0,2).toUpperCase()}</span>` : ''; })()}
+            ${proj.lead}
+          </div>
         </div>
         <div class="info-card">
           <div class="info-card-label">Start → End</div>
@@ -1115,6 +1122,38 @@ const ProjectView = {
           <p style="font-size:14px;color:#3f4d61;line-height:1.7;white-space:pre-wrap">${proj.description}</p>
         </div>
       </div>` : ''}
+
+      ${(() => {
+        const allUsers = DB.users();
+        const memberIds = proj.memberIds || [];
+        const lead = allUsers.find(u => u.name === proj.lead);
+        const members = memberIds.map(id => allUsers.find(u => u.id === id)).filter(Boolean);
+        const team = lead
+          ? [{ ...lead, isLead: true }, ...members.filter(u => u.id !== lead.id)]
+          : members;
+        if (!team.length) return '';
+        const tasks = DB.tasks().filter(t => t.projectId === proj.id);
+        return `
+        <div class="section-card">
+          <div class="section-card-header"><h3>Team (${team.length})</h3></div>
+          <div class="section-card-body">
+            <div class="team-cards">
+              ${team.map(u => {
+                const assigned = tasks.filter(t => t.assignee === u.name);
+                const done = assigned.filter(t => t.status === 'completed').length;
+                return `<div class="team-member-card">
+                  <div class="team-member-avatar">${u.avatar || u.name.slice(0,2).toUpperCase()}</div>
+                  <div class="team-member-info">
+                    <div class="team-member-name">${u.name}${u.isLead ? ' <span class="badge badge-active" style="font-size:10px;padding:1px 6px">Lead</span>' : ''}</div>
+                    <div class="team-member-role">${u.role}</div>
+                    <div class="team-member-tasks">${assigned.length} task(s) · ${done} done</div>
+                  </div>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>
+        </div>`;
+      })()}
     `;
   },
 
@@ -1257,7 +1296,6 @@ const ProjectView = {
 
   /* ── Tab: Action Plan ── */
   _renderActionPlan(proj, tc) {
-    const all = DB.actionItems().filter(a => a.projectId === proj.id);
     let filterStatus = 'all';
     let filterPriority = 'all';
 
@@ -1271,6 +1309,7 @@ const ProjectView = {
     }
 
     const render = () => {
+      const all = DB.actionItems().filter(a => a.projectId === proj.id);
       let list = all;
       if (filterStatus !== 'all')   list = list.filter(a => a.status === filterStatus);
       if (filterPriority !== 'all') list = list.filter(a => a.priority === filterPriority);
@@ -1834,6 +1873,17 @@ const ProjectModal = {
             <input name="budget" type="number" min="0" value="${proj?.budget || ''}">
           </div>
         </div>
+        <div class="form-field">
+          <label>Team Members</label>
+          <div class="team-checkboxes">
+            ${DB.users().map(u => `
+              <label class="team-check${(proj?.memberIds||[]).includes(u.id) ? ' is-checked' : ''}">
+                <input type="checkbox" name="memberIds" value="${u.id}" ${(proj?.memberIds||[]).includes(u.id) ? 'checked' : ''}>
+                <span class="team-check-avatar">${u.avatar || u.name.slice(0,2).toUpperCase()}</span>
+                <span>${u.name}</span>
+              </label>`).join('')}
+          </div>
+        </div>
         <div class="form-row">
           <div class="form-field">
             <label>Start Date</label>
@@ -1858,21 +1908,28 @@ const ProjectModal = {
     UI.openModal(title, body, true);
 
     document.getElementById('modal-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.querySelectorAll('.team-check').forEach(label => {
+      label.addEventListener('click', () => {
+        const cb = label.querySelector('input[type=checkbox]');
+        label.classList.toggle('is-checked', cb.checked);
+      });
+    });
     document.getElementById('form-project').addEventListener('submit', e => {
       e.preventDefault();
       const fd = new FormData(e.target);
       const data = Object.fromEntries(fd);
       data.budget = parseFloat(data.budget) || 0;
 
+      const memberIds = Array.from(e.target.querySelectorAll('[name="memberIds"]:checked')).map(cb => Number(cb.value));
       const projects = DB.projects();
       if (proj) {
         const idx = projects.findIndex(p => p.id === proj.id);
-        projects[idx] = { ...proj, ...data };
+        projects[idx] = { ...proj, ...data, memberIds };
         DB.saveProjects(projects);
         UI.toast('Project updated.', 'success');
         Router.go('project', proj.id);
       } else {
-        const newProj = { ...data, id: 'proj-' + DB.uid(), createdAt: new Date().toISOString() };
+        const newProj = { ...data, memberIds, id: 'proj-' + DB.uid(), createdAt: new Date().toISOString() };
         DB.saveProjects([...projects, newProj]);
         UI.toast('Project created.', 'success');
         Router.go('project', newProj.id);
@@ -2699,6 +2756,13 @@ const UsersView = {
   render() {
     const session = Auth.current();
     const users = DB.users();
+    const projects = DB.projects();
+    const tasks = DB.tasks();
+
+    const userProjects = u => projects.filter(p =>
+      p.lead === u.name || (p.memberIds || []).includes(u.id)
+    );
+
     document.getElementById('main-content').innerHTML = `
       <div class="section-card">
         <div class="section-card-header">
@@ -2706,13 +2770,23 @@ const UsersView = {
           <button class="btn btn-primary btn-sm" id="btn-add-user">+ New User</button>
         </div>
         <table class="data-table">
-          <thead><tr><th></th><th>Name</th><th>Email</th><th>Role</th><th>Password</th><th></th></tr></thead>
+          <thead><tr><th></th><th>Name</th><th>Email</th><th>Role</th><th>Projects</th><th>Password</th><th></th></tr></thead>
           <tbody>
-            ${users.map(u => `<tr ${u.email === session?.email ? 'style="background:var(--grey)"' : ''}>
+            ${users.map(u => {
+              const myProjects = userProjects(u);
+              const myTasks = tasks.filter(t => t.assignee === u.name);
+              const doneTasks = myTasks.filter(t => t.status === 'completed').length;
+              return `<tr ${u.email === session?.email ? 'style="background:var(--grey)"' : ''}>
               <td><div style="width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">${u.avatar || u.name.slice(0,2).toUpperCase()}</div></td>
               <td style="font-weight:700">${u.name}${u.email === session?.email ? ' <span style="font-size:11px;color:var(--mid);font-weight:400">(you)</span>' : ''}</td>
               <td style="font-size:13px">${u.email}</td>
               <td><span class="badge ${u.role === 'admin' ? 'badge-active' : 'badge-in-progress'}">${u.role}</span></td>
+              <td>
+                ${myProjects.length === 0
+                  ? `<span style="color:var(--mid);font-size:12px">None</span>`
+                  : myProjects.map(p => `<span class="user-proj-chip ${p.lead === u.name ? 'user-proj-lead' : ''}" data-route-proj="${p.id}" title="${p.lead === u.name ? 'Lead' : 'Member'}">${p.name}</span>`).join('')}
+                <div style="font-size:11px;color:var(--mid);margin-top:3px">${myTasks.length} task(s) · ${doneTasks} done</div>
+              </td>
               <td>
                 ${u.password
                   ? `<span style="font-size:12px;font-weight:700;color:#16a34a">● Set</span>`
@@ -2725,7 +2799,8 @@ const UsersView = {
                   ${u.email !== session?.email ? `<button class="btn btn-danger btn-sm" data-delete-user="${u.id}">✕</button>` : ''}
                 </div>
               </td>
-            </tr>`).join('')}
+            </tr>`;
+            }).join('')}
           </tbody>
         </table>
       </div>
@@ -2742,6 +2817,9 @@ const UsersView = {
         UsersView.render();
       });
     });
+    document.querySelectorAll('[data-route-proj]').forEach(chip =>
+      chip.addEventListener('click', () => Router.go('project', chip.dataset.routeProj))
+    );
   },
 
   /* Profile info only — no password here */
@@ -3559,6 +3637,13 @@ document.addEventListener('click', e => {
   if (!DB.get('seeded_v2')) {
     if (!DB.get('risks')) DB.saveRisks(SEED.risks);
     DB.set('seeded_v2', true);
+  }
+  /* One-time migration: add memberIds to seed projects */
+  if (!DB.get('seeded_v3')) {
+    const memberMap = { 'proj-1': [1, 2], 'proj-2': [2, 3], 'proj-3': [1, 3], 'proj-4': [3] };
+    const projs = DB.projects().map(p => p.memberIds ? p : { ...p, memberIds: memberMap[p.id] || [] });
+    DB.saveProjects(projs);
+    DB.set('seeded_v3', true);
   }
   const session = Auth.current();
   if (session) {
