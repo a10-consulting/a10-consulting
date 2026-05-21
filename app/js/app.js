@@ -2643,7 +2643,7 @@ const UsersView = {
           <button class="btn btn-primary btn-sm" id="btn-add-user">+ New User</button>
         </div>
         <table class="data-table">
-          <thead><tr><th></th><th>Name</th><th>Email</th><th>Role</th><th></th></tr></thead>
+          <thead><tr><th></th><th>Name</th><th>Email</th><th>Role</th><th>Password</th><th></th></tr></thead>
           <tbody>
             ${users.map(u => `<tr ${u.email === session?.email ? 'style="background:var(--grey)"' : ''}>
               <td><div style="width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">${u.avatar || u.name.slice(0,2).toUpperCase()}</div></td>
@@ -2651,8 +2651,14 @@ const UsersView = {
               <td style="font-size:13px">${u.email}</td>
               <td><span class="badge ${u.role === 'admin' ? 'badge-active' : 'badge-in-progress'}">${u.role}</span></td>
               <td>
+                ${u.password
+                  ? `<span style="font-size:12px;font-weight:700;color:#16a34a">● Set</span>`
+                  : `<span style="font-size:12px;font-weight:700;color:#dc2626">⚠ Not set</span>`}
+              </td>
+              <td>
                 <div class="actions-cell">
                   <button class="btn btn-secondary btn-sm" data-edit-user="${u.id}">Edit</button>
+                  <button class="btn btn-secondary btn-sm" data-pwd-user="${u.id}" title="Change password">🔑</button>
                   ${u.email !== session?.email ? `<button class="btn btn-danger btn-sm" data-delete-user="${u.id}">✕</button>` : ''}
                 </div>
               </td>
@@ -2663,25 +2669,42 @@ const UsersView = {
     `;
 
     document.getElementById('btn-add-user')?.addEventListener('click', () => UsersView.openModal(null));
-
-    document.querySelectorAll('[data-edit-user]').forEach(btn => {
-      btn.addEventListener('click', () => UsersView.openModal(btn.dataset.editUser));
-    });
-
+    document.querySelectorAll('[data-edit-user]').forEach(btn => btn.addEventListener('click', () => UsersView.openModal(btn.dataset.editUser)));
+    document.querySelectorAll('[data-pwd-user]').forEach(btn => btn.addEventListener('click', () => UsersView.changePasswordModal(btn.dataset.pwdUser)));
     document.querySelectorAll('[data-delete-user]').forEach(btn => {
       btn.addEventListener('click', () => {
         if (!UI.confirm('Delete this user?')) return;
-        const updated = DB.users().filter(u => String(u.id) !== String(btn.dataset.deleteUser));
-        DB.saveUsers(updated);
+        DB.saveUsers(DB.users().filter(u => String(u.id) !== String(btn.dataset.deleteUser)));
         UI.toast('User deleted.', 'default');
         UsersView.render();
       });
     });
   },
 
+  /* Profile info only — no password here */
   openModal(userId) {
     const users = DB.users();
     const user = userId ? users.find(u => String(u.id) === String(userId)) : null;
+
+    const pwdFields = user ? '' : `
+      <div class="form-field">
+        <label>Password *</label>
+        <div class="pwd-wrap">
+          <input id="inp-new-pwd" name="password" type="password" required placeholder="Minimum 6 characters" autocomplete="new-password">
+          <button type="button" class="pwd-toggle" data-target="inp-new-pwd" aria-label="Show password">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Confirm Password *</label>
+        <div class="pwd-wrap">
+          <input id="inp-confirm-pwd" name="confirm" type="password" required placeholder="Repeat password" autocomplete="new-password">
+          <button type="button" class="pwd-toggle" data-target="inp-confirm-pwd" aria-label="Show password">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>`;
 
     UI.openModal(user ? 'Edit User' : 'New User', `
       <form id="form-user">
@@ -2691,33 +2714,36 @@ const UsersView = {
             <input name="name" required value="${user?.name || ''}">
           </div>
           <div class="form-field">
-            <label>Avatar Initials</label>
+            <label>Initials</label>
             <input name="avatar" maxlength="2" placeholder="e.g. AC" value="${user?.avatar || ''}">
           </div>
         </div>
         <div class="form-field">
           <label>Email *</label>
-          <input name="email" type="email" required value="${user?.email || ''}">
+          <input name="email" type="email" required value="${user?.email || ''}" autocomplete="off">
         </div>
-        <div class="form-row">
-          <div class="form-field">
-            <label>Password *</label>
-            <input name="password" type="password" ${user ? '' : 'required'} placeholder="${user ? 'Leave blank to keep current' : ''}">
-          </div>
-          <div class="form-field">
-            <label>Role</label>
-            <select name="role">
-              <option value="consultant" ${user?.role === 'consultant' ? 'selected' : ''}>Consultant</option>
-              <option value="admin" ${user?.role === 'admin' ? 'selected' : ''}>Admin</option>
-            </select>
-          </div>
+        <div class="form-field">
+          <label>Role</label>
+          <select name="role">
+            <option value="consultant" ${user?.role === 'consultant' ? 'selected' : ''}>Consultant</option>
+            <option value="admin" ${user?.role === 'admin' ? 'selected' : ''}>Admin</option>
+          </select>
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+        ${pwdFields}
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
           <button type="button" class="btn btn-secondary" id="user-cancel">Cancel</button>
           <button type="submit" class="btn btn-primary">${user ? 'Save Changes' : 'Create User'}</button>
         </div>
       </form>
     `);
+
+    /* show/hide toggles */
+    document.querySelectorAll('.pwd-toggle[data-target]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const inp = document.getElementById(btn.dataset.target);
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+      });
+    });
 
     document.getElementById('user-cancel').addEventListener('click', UI.closeModal.bind(UI));
     document.getElementById('form-user').addEventListener('submit', e => {
@@ -2725,19 +2751,86 @@ const UsersView = {
       const fd = new FormData(e.target);
       const data = Object.fromEntries(fd);
 
-      if (!data.avatar) data.avatar = data.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      if (!data.avatar) data.avatar = data.name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+      /* new user: validate password match */
+      if (!user) {
+        if (data.password.length < 6) { UI.toast('Password must be at least 6 characters.', 'default'); return; }
+        if (data.password !== data.confirm) { UI.toast('Passwords do not match.', 'default'); return; }
+        delete data.confirm;
+      }
 
       const list = DB.users();
       if (user) {
         const idx = list.findIndex(u => String(u.id) === String(userId));
-        list[idx] = { ...user, ...data, password: data.password || user.password };
+        const { password: _pwd, confirm: _c, ...profileData } = data;
+        list[idx] = { ...user, ...profileData };
       } else {
-        if (!data.password) { UI.toast('Password is required.', 'default'); return; }
         list.push({ ...data, id: DB.uid() });
       }
       DB.saveUsers(list);
       UI.closeModal();
       UI.toast(user ? 'User updated.' : 'User created.', 'success');
+      UsersView.render();
+    });
+  },
+
+  /* Dedicated password-change modal */
+  changePasswordModal(userId) {
+    const user = DB.users().find(u => String(u.id) === String(userId));
+    if (!user) return;
+
+    UI.openModal(`Change Password — ${user.name}`, `
+      <form id="form-change-pwd">
+        <p style="font-size:13px;color:var(--mid);margin:0 0 16px">
+          Setting a new password for <strong>${user.name}</strong> (${user.email}).
+          ${user.password ? 'This will replace the existing password.' : '<span style="color:#dc2626">This user currently has no password set.</span>'}
+        </p>
+        <div class="form-field">
+          <label>New Password *</label>
+          <div class="pwd-wrap">
+            <input id="inp-new-pwd1" name="password" type="password" required placeholder="Minimum 6 characters" autocomplete="new-password">
+            <button type="button" class="pwd-toggle" data-target="inp-new-pwd1" aria-label="Show password">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Confirm New Password *</label>
+          <div class="pwd-wrap">
+            <input id="inp-new-pwd2" name="confirm" type="password" required placeholder="Repeat new password" autocomplete="new-password">
+            <button type="button" class="pwd-toggle" data-target="inp-new-pwd2" aria-label="Show password">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+          <button type="button" class="btn btn-secondary" id="pwd-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Set Password</button>
+        </div>
+      </form>
+    `);
+
+    document.querySelectorAll('.pwd-toggle[data-target]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const inp = document.getElementById(btn.dataset.target);
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+      });
+    });
+
+    document.getElementById('pwd-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('form-change-pwd').addEventListener('submit', e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const { password, confirm } = Object.fromEntries(fd);
+      if (password.length < 6) { UI.toast('Password must be at least 6 characters.', 'default'); return; }
+      if (password !== confirm) { UI.toast('Passwords do not match.', 'default'); return; }
+      const list = DB.users();
+      const idx = list.findIndex(u => String(u.id) === String(userId));
+      list[idx] = { ...list[idx], password };
+      DB.saveUsers(list);
+      UI.closeModal();
+      UI.toast(`Password updated for ${user.name}.`, 'success');
       UsersView.render();
     });
   },
@@ -2866,6 +2959,12 @@ const ReportsView = {
 };
 
 /* ── Global Event Listeners ────────────────────────────────── */
+
+/* Login: show/hide password toggle */
+document.getElementById('btn-toggle-login-pwd').addEventListener('click', () => {
+  const inp = document.getElementById('inp-password');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+});
 
 /* Login form */
 document.getElementById('form-login').addEventListener('submit', e => {
