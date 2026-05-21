@@ -139,28 +139,46 @@ const SEED = {
   ],
   budgetItems: [
     /* proj-1 */
-    { id: 'b1', projectId: 'proj-1', category: 'Personnel',             planned: 150000, actual: 52000, notes: 'A10 team fees' },
-    { id: 'b2', projectId: 'proj-1', category: 'Travel & Accommodation',planned: 35000,  actual: 18500, notes: 'Site visits — 4 trips to date' },
-    { id: 'b3', projectId: 'proj-1', category: 'External Services',     planned: 40000,  actual: 12000, notes: 'Specialist technical consultants' },
-    { id: 'b4', projectId: 'proj-1', category: 'Technology',            planned: 15000,  actual: 5000,  notes: 'Software licences and tools' },
-    { id: 'b5', projectId: 'proj-1', category: 'Contingency',           planned: 10000,  actual: 0,     notes: '4% contingency reserve' },
+    { id: 'b1', projectId: 'proj-1', category: 'Personnel',             wbs: 'WBS-001 · People & Labour',      planned: 150000, actual: 52000, notes: 'A10 team fees' },
+    { id: 'b2', projectId: 'proj-1', category: 'Travel & Accommodation',wbs: 'CC-002 · Site Operations',       planned: 35000,  actual: 18500, notes: 'Site visits — 4 trips to date' },
+    { id: 'b3', projectId: 'proj-1', category: 'External Services',     wbs: 'WBS-003 · Technical Advisory',   planned: 40000,  actual: 12000, notes: 'Specialist technical consultants' },
+    { id: 'b4', projectId: 'proj-1', category: 'Technology',            wbs: 'CC-004 · IT & Systems',          planned: 15000,  actual: 5000,  notes: 'Software licences and tools' },
+    { id: 'b5', projectId: 'proj-1', category: 'Contingency',           wbs: 'CC-005 · Reserve',               planned: 10000,  actual: 0,     notes: '4% contingency reserve' },
     /* proj-2 */
-    { id: 'b6', projectId: 'proj-2', category: 'Personnel',             planned: 110000, actual: 72000, notes: 'A10 team fees' },
-    { id: 'b7', projectId: 'proj-2', category: 'Travel & Accommodation',planned: 20000,  actual: 15000, notes: '3 cities covered' },
-    { id: 'b8', projectId: 'proj-2', category: 'Technology',            planned: 25000,  actual: 18000, notes: 'WMS integration tools' },
-    { id: 'b9', projectId: 'proj-2', category: 'Contingency',           planned: 25000,  actual: 7000,  notes: '' },
+    { id: 'b6', projectId: 'proj-2', category: 'Personnel',             wbs: 'WBS-001 · Consulting Fees',      planned: 110000, actual: 72000, notes: 'A10 team fees' },
+    { id: 'b7', projectId: 'proj-2', category: 'Travel & Accommodation',wbs: 'CC-002 · Travel',                planned: 20000,  actual: 15000, notes: '3 cities covered' },
+    { id: 'b8', projectId: 'proj-2', category: 'Technology',            wbs: 'WBS-003 · WMS Integration',      planned: 25000,  actual: 18000, notes: 'WMS integration tools' },
+    { id: 'b9', projectId: 'proj-2', category: 'Contingency',           wbs: 'CC-004 · Reserve',               planned: 25000,  actual: 7000,  notes: '' },
     /* proj-3 */
-    { id: 'b10', projectId: 'proj-3', category: 'Personnel',             planned: 260000, actual: 52000, notes: 'A10 team fees — 11 months' },
-    { id: 'b11', projectId: 'proj-3', category: 'Travel & Accommodation',planned: 60000,  actual: 14000, notes: 'Site-based work' },
-    { id: 'b12', projectId: 'proj-3', category: 'External Services',     planned: 50000,  actual: 8000,  notes: 'Engineering subcontractors' },
-    { id: 'b13', projectId: 'proj-3', category: 'Technology',            planned: 20000,  actual: 5000,  notes: '' },
-    { id: 'b14', projectId: 'proj-3', category: 'Materials',             planned: 15000,  actual: 3000,  notes: '' },
-    { id: 'b15', projectId: 'proj-3', category: 'Contingency',           planned: 15000,  actual: 2000,  notes: '' },
+    { id: 'b10', projectId: 'proj-3', category: 'Personnel',             wbs: 'WBS-001 · Programme Team',       planned: 260000, actual: 52000, notes: 'A10 team fees — 11 months' },
+    { id: 'b11', projectId: 'proj-3', category: 'Travel & Accommodation',wbs: 'CC-002 · Site Travel',           planned: 60000,  actual: 14000, notes: 'Site-based work' },
+    { id: 'b12', projectId: 'proj-3', category: 'External Services',     wbs: 'WBS-003 · Engineering',          planned: 50000,  actual: 8000,  notes: 'Engineering subcontractors' },
+    { id: 'b13', projectId: 'proj-3', category: 'Technology',            wbs: 'CC-004 · Systems',               planned: 20000,  actual: 5000,  notes: '' },
+    { id: 'b14', projectId: 'proj-3', category: 'Materials',             wbs: 'CC-005 · Site Materials',        planned: 15000,  actual: 3000,  notes: '' },
+    { id: 'b15', projectId: 'proj-3', category: 'Contingency',           wbs: 'CC-006 · Reserve',               planned: 15000,  actual: 2000,  notes: '' },
     /* proj-4 */
-    { id: 'b16', projectId: 'proj-4', category: 'Personnel',             planned: 120000, actual: 118000, notes: 'A10 team fees' },
-    { id: 'b17', projectId: 'proj-4', category: 'Travel & Accommodation',planned: 18000,  actual: 16500,  notes: '' },
-    { id: 'b18', projectId: 'proj-4', category: 'Technology',            planned: 12000,  actual: 9800,   notes: '' },
-    { id: 'b19', projectId: 'proj-4', category: 'Contingency',           planned: 10000,  actual: 4200,   notes: '' },
+    { id: 'b16', projectId: 'proj-4', category: 'Personnel',             wbs: 'WBS-001 · Consulting Fees',      planned: 120000, actual: 118000, notes: 'A10 team fees' },
+    { id: 'b17', projectId: 'proj-4', category: 'Travel & Accommodation',wbs: 'CC-002 · Travel',                planned: 18000,  actual: 16500,  notes: '' },
+    { id: 'b18', projectId: 'proj-4', category: 'Technology',            wbs: 'WBS-003 · Analytics Tools',      planned: 12000,  actual: 9800,   notes: '' },
+    { id: 'b19', projectId: 'proj-4', category: 'Contingency',           wbs: 'CC-004 · Reserve',               planned: 10000,  actual: 4200,   notes: '' },
+  ],
+  purchaseOrders: [
+    { id: 'po-1', budgetItemId: 'b1', projectId: 'proj-1', poNumber: 'PO-2026-001', description: 'A10 Consulting Services – Phase 1 & 2', vendor: 'A10 Consulting', status: 'issued', amount: 80000, raisedDate: '2026-01-10', issuedDate: '2026-01-15', notes: '' },
+    { id: 'po-2', budgetItemId: 'b1', projectId: 'proj-1', poNumber: 'PO-2026-002', description: 'A10 Consulting Services – Phase 3', vendor: 'A10 Consulting', status: 'raised', amount: 70000, raisedDate: '2026-04-01', issuedDate: '', notes: '' },
+    { id: 'po-3', budgetItemId: 'b2', projectId: 'proj-1', poNumber: 'PO-2026-003', description: 'Site Travel & Accommodation Q1–Q2', vendor: 'CWT Travel Management', status: 'issued', amount: 35000, raisedDate: '2026-01-10', issuedDate: '2026-01-12', notes: '' },
+    { id: 'po-4', budgetItemId: 'b6', projectId: 'proj-2', poNumber: 'PO-2025-001', description: 'Supply Chain Redesign – A10 Fees', vendor: 'A10 Consulting', status: 'issued', amount: 110000, raisedDate: '2025-10-28', issuedDate: '2025-11-01', notes: '' },
+    { id: 'po-5', budgetItemId: 'b8', projectId: 'proj-2', poNumber: 'PO-2025-002', description: 'WMS Integration Development', vendor: 'TechOps Solutions', status: 'issued', amount: 25000, raisedDate: '2025-12-01', issuedDate: '2025-12-05', notes: '' },
+  ],
+  invoices: [
+    { id: 'inv-1', poId: 'po-1', projectId: 'proj-1', invoiceNumber: 'A10-2026-001', description: 'Phase 1 – January Professional Fees', amount: 25000, invoiceDate: '2026-01-31', dueDate: '2026-02-28', status: 'paid', paidDate: '2026-02-20', notes: '' },
+    { id: 'inv-2', poId: 'po-1', projectId: 'proj-1', invoiceNumber: 'A10-2026-002', description: 'Phase 1 – February Professional Fees', amount: 27000, invoiceDate: '2026-02-28', dueDate: '2026-03-31', status: 'paid', paidDate: '2026-03-22', notes: '' },
+    { id: 'inv-3', poId: 'po-3', projectId: 'proj-1', invoiceNumber: 'A10-2026-003', description: 'Q1 Site Travel – 4 trips', amount: 18500, invoiceDate: '2026-03-31', dueDate: '2026-04-30', status: 'approved', paidDate: '', notes: '' },
+    { id: 'inv-4', poId: 'po-4', projectId: 'proj-2', invoiceNumber: 'A10-2025-001', description: 'SC Redesign – November Fee', amount: 18000, invoiceDate: '2025-11-30', dueDate: '2025-12-31', status: 'paid', paidDate: '2025-12-20', notes: '' },
+    { id: 'inv-5', poId: 'po-4', projectId: 'proj-2', invoiceNumber: 'A10-2025-002', description: 'SC Redesign – December Fee', amount: 18000, invoiceDate: '2025-12-31', dueDate: '2026-01-31', status: 'paid', paidDate: '2026-01-25', notes: '' },
+    { id: 'inv-6', poId: 'po-4', projectId: 'proj-2', invoiceNumber: 'A10-2026-004', description: 'SC Redesign – January Fee', amount: 18000, invoiceDate: '2026-01-31', dueDate: '2026-02-28', status: 'paid', paidDate: '2026-02-20', notes: '' },
+    { id: 'inv-7', poId: 'po-4', projectId: 'proj-2', invoiceNumber: 'A10-2026-005', description: 'SC Redesign – February Fee', amount: 18000, invoiceDate: '2026-02-28', dueDate: '2026-03-31', status: 'approved', paidDate: '', notes: '' },
+    { id: 'inv-8', poId: 'po-5', projectId: 'proj-2', invoiceNumber: 'TOS-2026-001', description: 'WMS Integration – Milestone 1', amount: 12000, invoiceDate: '2026-02-15', dueDate: '2026-03-15', status: 'paid', paidDate: '2026-03-10', notes: '' },
+    { id: 'inv-9', poId: 'po-5', projectId: 'proj-2', invoiceNumber: 'TOS-2026-002', description: 'WMS Integration – Milestone 2', amount: 6000, invoiceDate: '2026-03-31', dueDate: '2026-04-30', status: 'pending', paidDate: '', notes: '' },
   ],
   documents: [
     {
@@ -243,6 +261,11 @@ const DB = {
   saveSuppliers(arr)    { this.set('suppliers', arr); },
   saveUsers(arr)        { this.set('users', arr); },
 
+  purchaseOrders() { return this.get('purchaseOrders') || []; },
+  invoices()       { return this.get('invoices')       || []; },
+  savePurchaseOrders(arr) { this.set('purchaseOrders', arr); },
+  saveInvoices(arr)       { this.set('invoices', arr); },
+
   projectById(id)  { return this.projects().find(p => p.id === id); },
 
   /* Computed: project completion based on tasks */
@@ -255,9 +278,9 @@ const DB = {
 
   /* Computed: budget spent for project */
   projectSpent(projectId) {
-    return this.budgetItems()
-      .filter(b => b.projectId === projectId)
-      .reduce((s, b) => s + (b.actual || 0), 0);
+    const invos = this.invoices().filter(i => i.projectId === projectId && i.status === 'paid');
+    if (invos.length > 0) return invos.reduce((s, i) => s + (i.amount || 0), 0);
+    return this.budgetItems().filter(b => b.projectId === projectId).reduce((s, b) => s + (b.actual || 0), 0);
   },
 
   /* Computed: budget planned for project */
@@ -279,6 +302,8 @@ const DB = {
     this.saveClients(SEED.clients);
     this.saveSuppliers(SEED.suppliers);
     this.saveUsers(USERS);
+    this.savePurchaseOrders(SEED.purchaseOrders);
+    this.saveInvoices(SEED.invoices);
     this.set('seeded', true);
   },
 };
@@ -428,6 +453,24 @@ function actionStatusBadge(status) {
     'open':        '<span class="badge badge-open">Open</span>',
     'in-progress': '<span class="badge badge-in-progress">In Progress</span>',
     'done':        '<span class="badge badge-done">Done</span>',
+  };
+  return map[status] || `<span class="badge">${status}</span>`;
+}
+
+function poStatusBadge(status) {
+  const map = {
+    'raised': '<span class="badge badge-in-progress">Raised</span>',
+    'issued': '<span class="badge badge-active">Issued</span>',
+    'closed': '<span class="badge badge-done">Closed</span>',
+  };
+  return map[status] || `<span class="badge">${status}</span>`;
+}
+
+function invoiceStatusBadge(status) {
+  const map = {
+    'pending':  '<span class="badge badge-todo">Pending</span>',
+    'approved': '<span class="badge badge-in-progress">Approved</span>',
+    'paid':     '<span class="badge badge-done">Paid</span>',
   };
   return map[status] || `<span class="badge">${status}</span>`;
 }
