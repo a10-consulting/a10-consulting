@@ -197,6 +197,18 @@ const SEED = {
       },
     },
   ],
+  clients: [
+    { id: 'cli-1', name: 'Acme Resources Ltd',       sector: 'Mining & Exploration',              contact: 'James Whitfield', email: 'j.whitfield@acme.com',      phone: '+61 8 9000 1234',  country: 'Australia',    notes: 'Key account. Ongoing relationship since 2024.' },
+    { id: 'cli-2', name: 'GlobalTrans SA',            sector: 'Supply Chain & Logistics',          contact: 'Marie Dupont',    email: 'm.dupont@globaltrans.com',   phone: '+27 21 555 0100',  country: 'South Africa', notes: '' },
+    { id: 'cli-3', name: 'BuildCorp International',   sector: 'Operations & Infrastructure',       contact: 'David Keane',     email: 'd.keane@buildcorp.com',      phone: '+351 22 300 4000', country: 'Portugal',     notes: 'Project on hold — awaiting governance approval.' },
+    { id: 'cli-4', name: 'Meridian Industrial Group', sector: 'Performance & Cost Transformation', contact: 'Sarah Okonkwo',   email: 's.okonkwo@meridian.com',     phone: '+27 11 200 3300',  country: 'South Africa', notes: 'Completed engagement. Strong results.' },
+  ],
+  suppliers: [
+    { id: 'sup-1', name: 'Apex Drilling Services', category: 'Technical Services', contact: 'Chris Moran',    email: 'c.moran@apexdrilling.com',  phone: '+61 8 9100 2200',  country: 'Australia',    notes: 'Primary drilling contractor for Mining Optimisation.' },
+    { id: 'sup-2', name: 'FastLog Logistics',       category: 'Logistics',         contact: 'Lena Brandt',    email: 'lena@fastlog.eu',            phone: '+351 21 400 5600', country: 'Portugal',     notes: '' },
+    { id: 'sup-3', name: 'TechOps Solutions',       category: 'Technology',        contact: 'Raj Patel',      email: 'raj@techops.io',             phone: '+27 11 600 7700',  country: 'South Africa', notes: 'WMS integration tools for Supply Chain Redesign.' },
+    { id: 'sup-4', name: 'SiteForce Contractors',   category: 'Construction',      contact: 'Tom Hargreaves', email: 't.hargreaves@siteforce.com', phone: '+61 3 9800 4400',  country: 'Australia',    notes: '' },
+  ],
 };
 
 /* ── DB Layer ──────────────────────────────────────────────── */
@@ -218,12 +230,16 @@ const DB = {
   actionItems()  { return this.get('actionItems')   || []; },
   budgetItems()  { return this.get('budgetItems')   || []; },
   documents()    { return this.get('documents')     || []; },
+  clients()      { return this.get('clients')       || []; },
+  suppliers()    { return this.get('suppliers')     || []; },
 
   saveProjects(arr)     { this.set('projects', arr); },
   saveTasks(arr)        { this.set('tasks', arr); },
   saveActionItems(arr)  { this.set('actionItems', arr); },
   saveBudgetItems(arr)  { this.set('budgetItems', arr); },
   saveDocuments(arr)    { this.set('documents', arr); },
+  saveClients(arr)      { this.set('clients', arr); },
+  saveSuppliers(arr)    { this.set('suppliers', arr); },
 
   projectById(id)  { return this.projects().find(p => p.id === id); },
 
@@ -258,6 +274,8 @@ const DB = {
     this.saveActionItems(SEED.actionItems);
     this.saveBudgetItems(SEED.budgetItems);
     this.saveDocuments(SEED.documents);
+    this.saveClients(SEED.clients);
+    this.saveSuppliers(SEED.suppliers);
     this.set('seeded', true);
   },
 };
@@ -322,6 +340,7 @@ const UI = {
     document.getElementById('doc-title').textContent = title;
     document.getElementById('doc-body').innerHTML = bodyHtml;
     document.getElementById('doc-overlay').classList.remove('hidden');
+    document.getElementById('btn-print-doc').onclick = () => printContent(document.getElementById('doc-body').innerHTML);
   },
 
   closeDocPreview() {
@@ -378,40 +397,40 @@ function isOverdue(dueDate) {
 
 function statusBadge(status) {
   const map = {
-    'active':    '<span class="badge badge-active">Activo</span>',
-    'on-hold':   '<span class="badge badge-on-hold">Em Pausa</span>',
-    'completed': '<span class="badge badge-completed">Concluído</span>',
-    'draft':     '<span class="badge badge-draft">Rascunho</span>',
+    'active':    '<span class="badge badge-active">Active</span>',
+    'on-hold':   '<span class="badge badge-on-hold">On Hold</span>',
+    'completed': '<span class="badge badge-completed">Completed</span>',
+    'draft':     '<span class="badge badge-draft">Draft</span>',
   };
   return map[status] || `<span class="badge">${status}</span>`;
 }
 
 function taskStatusBadge(status) {
   const map = {
-    'todo':        '<span class="badge badge-todo">Por Fazer</span>',
-    'in-progress': '<span class="badge badge-in-progress">Em Curso</span>',
-    'completed':   '<span class="badge badge-done">Concluída</span>',
-    'blocked':     '<span class="badge badge-critical">Bloqueada</span>',
+    'todo':        '<span class="badge badge-todo">To Do</span>',
+    'in-progress': '<span class="badge badge-in-progress">In Progress</span>',
+    'completed':   '<span class="badge badge-done">Completed</span>',
+    'blocked':     '<span class="badge badge-critical">Blocked</span>',
   };
   return map[status] || `<span class="badge">${status}</span>`;
 }
 
 function priorityBadge(priority) {
-  const labels = { low: 'Baixa', medium: 'Média', high: 'Alta', critical: 'Crítica' };
+  const labels = { low: 'Low', medium: 'Medium', high: 'High', critical: 'Critical' };
   return `<span class="badge badge-${priority}">${labels[priority] || priority}</span>`;
 }
 
 function actionStatusBadge(status) {
   const map = {
-    'open':        '<span class="badge badge-open">Aberto</span>',
-    'in-progress': '<span class="badge badge-in-progress">Em Curso</span>',
-    'done':        '<span class="badge badge-done">Feito</span>',
+    'open':        '<span class="badge badge-open">Open</span>',
+    'in-progress': '<span class="badge badge-in-progress">In Progress</span>',
+    'done':        '<span class="badge badge-done">Done</span>',
   };
   return map[status] || `<span class="badge">${status}</span>`;
 }
 
 function statusLabel(s) {
-  const map = { 'active': 'Activo', 'on-hold': 'Em Pausa', 'completed': 'Concluído', 'draft': 'Rascunho' };
+  const map = { 'active': 'Active', 'on-hold': 'On Hold', 'completed': 'Completed', 'draft': 'Draft' };
   return map[s] || s;
 }
 
@@ -420,6 +439,17 @@ function progressBar(pct) {
     <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
     <span class="progress-pct">${pct}%</span>
   </div>`;
+}
+
+function printContent(html) {
+  const cssText = Array.from(document.styleSheets)
+    .map(s => { try { return Array.from(s.cssRules).map(r => r.cssText).join('\n'); } catch { return ''; } })
+    .join('\n');
+  const win = window.open('', '_blank', 'width=900,height=700');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${cssText}</style></head><body>${html}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 600);
 }
 
 /* ── Router ────────────────────────────────────────────────── */
@@ -447,22 +477,42 @@ const Router = {
 
     if (route === 'dashboard') {
       UI.setTitle('Dashboard', 'A10 Projects');
-      UI.setHeaderActions('<button class="btn btn-primary" id="btn-new-project">+ Novo Projecto</button>');
+      UI.setHeaderActions('<button class="btn btn-primary" id="btn-new-project">+ New Project</button>');
+      Dashboard.render();
+      document.getElementById('btn-new-project')?.addEventListener('click', () => ProjectModal.open());
+    } else if (route === 'active-projects') {
+      UI.setTitle('Active Projects', 'A10 Projects');
+      UI.setHeaderActions('<button class="btn btn-primary" id="btn-new-project">+ New Project</button>');
+      Dashboard.filter = 'active';
       Dashboard.render();
       document.getElementById('btn-new-project')?.addEventListener('click', () => ProjectModal.open());
     } else if (route === 'project') {
       const proj = DB.projectById(param);
       if (!proj) { Router.go('dashboard'); return; }
-      UI.setTitle(proj.name, 'Projectos');
+      UI.setTitle(proj.name, 'Projects');
       UI.setHeaderActions(`
         <button class="btn btn-secondary btn-sm" onclick="Router.go('dashboard')">← Dashboard</button>
-        <button class="btn btn-ghost btn-sm" onclick="ProjectModal.open('${proj.id}')">Editar</button>
+        <button class="btn btn-ghost btn-sm" onclick="ProjectModal.open('${proj.id}')">Edit</button>
       `);
       ProjectView.render(proj.id);
     } else if (route === 'reports') {
-      UI.setTitle('Relatórios', 'A10 Projects');
+      UI.setTitle('Reports', 'A10 Projects');
       UI.setHeaderActions('');
       ReportsView.render();
+    } else if (route === 'clients') {
+      UI.setTitle('Clients', 'A10 Projects');
+      UI.setHeaderActions('<button class="btn btn-primary" id="btn-new-client">+ New Client</button>');
+      ClientsView.render();
+      document.getElementById('btn-new-client')?.addEventListener('click', () => ClientsView.openModal());
+    } else if (route === 'suppliers') {
+      UI.setTitle('Suppliers', 'A10 Projects');
+      UI.setHeaderActions('<button class="btn btn-primary" id="btn-new-supplier">+ New Supplier</button>');
+      SuppliersView.render();
+      document.getElementById('btn-new-supplier')?.addEventListener('click', () => SuppliersView.openModal());
+    } else if (route === 'users') {
+      UI.setTitle('Users', 'A10 Projects');
+      UI.setHeaderActions('');
+      UsersView.render();
     }
   },
 
@@ -493,39 +543,39 @@ const Dashboard = {
     document.getElementById('main-content').innerHTML = `
       <div class="stat-grid">
         <div class="stat-card">
-          <div class="stat-label">Total Projectos</div>
+          <div class="stat-label">Total Projects</div>
           <div class="stat-value">${projects.length}</div>
-          <div class="stat-sub">${active} activos</div>
+          <div class="stat-sub">${active} active</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Orçamento Total</div>
+          <div class="stat-label">Total Budget</div>
           <div class="stat-value">${fmt(totalBudget)}</div>
-          <div class="stat-sub">Todos os projectos</div>
+          <div class="stat-sub">All projects</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Progresso Médio</div>
+          <div class="stat-label">Avg. Progress</div>
           <div class="stat-value">${avgCompletion}%</div>
-          <div class="stat-sub">Média de conclusão</div>
+          <div class="stat-sub">Average completion</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Acções Abertas</div>
+          <div class="stat-label">Open Actions</div>
           <div class="stat-value">${openActions}</div>
-          <div class="stat-sub">${actionItems.filter(a => a.priority === 'critical' && a.status !== 'done').length} críticas</div>
+          <div class="stat-sub">${actionItems.filter(a => a.priority === 'critical' && a.status !== 'done').length} critical</div>
         </div>
       </div>
 
       <div class="section-card">
         <div class="section-card-header">
-          <h3>Projectos</h3>
+          <h3>Projects</h3>
         </div>
         <div style="padding:16px 18px 0">
           <div class="filter-bar">
-            <button class="filter-tab ${this.filter === 'all' ? 'active' : ''}" data-filter="all">Todos</button>
-            <button class="filter-tab ${this.filter === 'active' ? 'active' : ''}" data-filter="active">Activos</button>
-            <button class="filter-tab ${this.filter === 'on-hold' ? 'active' : ''}" data-filter="on-hold">Em Pausa</button>
-            <button class="filter-tab ${this.filter === 'completed' ? 'active' : ''}" data-filter="completed">Concluídos</button>
-            <button class="filter-tab ${this.filter === 'draft' ? 'active' : ''}" data-filter="draft">Rascunho</button>
-            <input class="search-box" id="proj-search" placeholder="Pesquisar..." value="">
+            <button class="filter-tab ${this.filter === 'all' ? 'active' : ''}" data-filter="all">All</button>
+            <button class="filter-tab ${this.filter === 'active' ? 'active' : ''}" data-filter="active">Active</button>
+            <button class="filter-tab ${this.filter === 'on-hold' ? 'active' : ''}" data-filter="on-hold">On Hold</button>
+            <button class="filter-tab ${this.filter === 'completed' ? 'active' : ''}" data-filter="completed">Completed</button>
+            <button class="filter-tab ${this.filter === 'draft' ? 'active' : ''}" data-filter="draft">Draft</button>
+            <input class="search-box" id="proj-search" placeholder="Search..." value="">
           </div>
         </div>
         <div id="project-table-wrap"></div>
@@ -554,20 +604,20 @@ const Dashboard = {
     const list = this._filtered(projects, this.filter, search);
     const wrap = document.getElementById('project-table-wrap');
     if (!list.length) {
-      wrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📁</div><p>Nenhum projecto encontrado.</p></div>`;
+      wrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📁</div><p>No projects found.</p></div>`;
       return;
     }
     wrap.innerHTML = `
       <table class="data-table">
         <thead>
           <tr>
-            <th>Projecto / Cliente</th>
+            <th>Project / Client</th>
             <th>Sector</th>
-            <th>Estado</th>
-            <th>Responsável</th>
-            <th>Conclusão</th>
-            <th>Orçamento</th>
-            <th>Prazo</th>
+            <th>Status</th>
+            <th>Lead</th>
+            <th>Completion</th>
+            <th>Budget</th>
+            <th>Deadline</th>
             <th></th>
           </tr>
         </thead>
@@ -595,8 +645,8 @@ const Dashboard = {
               <td style="font-size:12px;color:var(--mid);white-space:nowrap">${fmtDate(p.endDate)}</td>
               <td>
                 <div class="actions-cell">
-                  <button class="btn btn-secondary btn-sm" data-project="${p.id}">Ver</button>
-                  <button class="btn btn-danger btn-sm" data-delete="${p.id}" title="Eliminar">✕</button>
+                  <button class="btn btn-secondary btn-sm" data-project="${p.id}">View</button>
+                  <button class="btn btn-danger btn-sm" data-delete="${p.id}" title="Delete">✕</button>
                 </div>
               </td>
             </tr>`;
@@ -622,14 +672,14 @@ const Dashboard = {
       const deleteId  = e.target.closest('[data-delete]')?.dataset.delete;
       if (projectId) Router.go('project', projectId);
       if (deleteId) {
-        if (!UI.confirm('Eliminar este projecto e todos os seus dados?')) return;
+        if (!UI.confirm('Delete this project and all its data?')) return;
         const projects = DB.projects().filter(p => p.id !== deleteId);
         DB.saveProjects(projects);
         DB.saveTasks(DB.tasks().filter(t => t.projectId !== deleteId));
         DB.saveActionItems(DB.actionItems().filter(a => a.projectId !== deleteId));
         DB.saveBudgetItems(DB.budgetItems().filter(b => b.projectId !== deleteId));
         DB.saveDocuments(DB.documents().filter(d => d.projectId !== deleteId));
-        UI.toast('Projecto eliminado.', 'default');
+        UI.toast('Project deleted.', 'default');
         Dashboard.render();
       }
     });
@@ -646,11 +696,11 @@ const ProjectView = {
     if (!proj) return;
 
     const tabs = [
-      { id: 'overview',     label: 'Visão Geral' },
+      { id: 'overview',     label: 'Overview' },
       { id: 'gantt',        label: 'Gantt' },
-      { id: 'action-plan',  label: 'Plano de Acção' },
-      { id: 'budget',       label: 'Orçamento' },
-      { id: 'documents',    label: 'Documentos' },
+      { id: 'action-plan',  label: 'Action Plan' },
+      { id: 'budget',       label: 'Budget' },
+      { id: 'documents',    label: 'Documents' },
     ];
 
     document.getElementById('main-content').innerHTML = `
@@ -697,7 +747,7 @@ const ProjectView = {
     tc.innerHTML = `
       <div class="overview-grid">
         <div class="info-card">
-          <div class="info-card-label">Cliente</div>
+          <div class="info-card-label">Client</div>
           <div class="info-card-value">${proj.client}</div>
         </div>
         <div class="info-card">
@@ -705,40 +755,40 @@ const ProjectView = {
           <div class="info-card-value">${proj.sector}</div>
         </div>
         <div class="info-card">
-          <div class="info-card-label">Estado</div>
+          <div class="info-card-label">Status</div>
           <div class="info-card-value">${statusBadge(proj.status)}</div>
         </div>
         <div class="info-card">
-          <div class="info-card-label">Responsável</div>
+          <div class="info-card-label">Lead</div>
           <div class="info-card-value">${proj.lead}</div>
         </div>
         <div class="info-card">
-          <div class="info-card-label">Início → Conclusão</div>
+          <div class="info-card-label">Start → End</div>
           <div class="info-card-value">${fmtDate(proj.startDate)} → ${fmtDate(proj.endDate)}</div>
         </div>
         <div class="info-card">
-          <div class="info-card-label">Orçamento</div>
+          <div class="info-card-label">Budget</div>
           <div class="info-card-value">${fmt(proj.budget)}</div>
-          <div class="info-card-sub">${fmt(spent)} utilizado (${budgetPct}%)</div>
+          <div class="info-card-sub">${fmt(spent)} used (${budgetPct}%)</div>
         </div>
       </div>
 
       <div class="section-card" style="margin-bottom:16px">
-        <div class="section-card-header"><h3>Progresso Global</h3></div>
+        <div class="section-card-header"><h3>Overall Progress</h3></div>
         <div class="section-card-body">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px">
             <div>
-              <div class="info-card-label">Conclusão (Tarefas)</div>
+              <div class="info-card-label">Completion (Tasks)</div>
               ${progressBar(pct)}
             </div>
             <div>
-              <div class="info-card-label">Orçamento Utilizado</div>
+              <div class="info-card-label">Budget Used</div>
               ${progressBar(budgetPct)}
             </div>
             <div>
-              <div class="info-card-label">Tarefas</div>
+              <div class="info-card-label">Tasks</div>
               <div style="font-size:20px;font-weight:900;letter-spacing:-1px;color:var(--navy)">${completedTasks}/${tasks.length}</div>
-              <div style="font-size:12px;color:var(--mid)">${openActions} acções abertas</div>
+              <div style="font-size:12px;color:var(--mid)">${openActions} open actions</div>
             </div>
           </div>
         </div>
@@ -746,7 +796,7 @@ const ProjectView = {
 
       ${proj.description ? `
       <div class="section-card">
-        <div class="section-card-header"><h3>Descrição do Projecto</h3></div>
+        <div class="section-card-header"><h3>Project Description</h3></div>
         <div class="section-card-body">
           <p style="font-size:14px;color:#3f4d61;line-height:1.7;white-space:pre-wrap">${proj.description}</p>
         </div>
@@ -760,21 +810,21 @@ const ProjectView = {
 
     let ganttHtml = '';
     if (!tasks.length) {
-      ganttHtml = `<div class="gantt-empty"><div class="empty-state-icon">📅</div><p>Ainda não existem tarefas para este projecto.</p></div>`;
+      ganttHtml = `<div class="gantt-empty"><div class="empty-state-icon">📅</div><p>No tasks yet for this project.</p></div>`;
     } else {
       ganttHtml = this._buildGantt(tasks, proj);
     }
 
     tc.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <p style="font-size:13px;color:var(--mid);margin:0">${tasks.length} tarefa(s) · A linha vermelha marca hoje</p>
-        <button class="btn btn-primary btn-sm" id="btn-add-task">+ Tarefa</button>
+        <p style="font-size:13px;color:var(--mid);margin:0">${tasks.length} task(s) · Red line marks today</p>
+        <button class="btn btn-primary btn-sm" id="btn-add-task">+ Task</button>
       </div>
       ${ganttHtml}
       <div style="margin-top:16px">
         <table class="data-table">
           <thead>
-            <tr><th>Tarefa</th><th>Fase</th><th>Responsável</th><th>Início</th><th>Fim</th><th>Estado</th><th>%</th><th></th></tr>
+            <tr><th>Task</th><th>Phase</th><th>Assignee</th><th>Start</th><th>End</th><th>Status</th><th>%</th><th></th></tr>
           </thead>
           <tbody>
             ${tasks.map(t => `<tr>
@@ -787,7 +837,7 @@ const ProjectView = {
               <td style="font-weight:700">${t.percentDone}%</td>
               <td>
                 <div class="actions-cell">
-                  <button class="btn btn-secondary btn-sm" data-edit-task="${t.id}">Editar</button>
+                  <button class="btn btn-secondary btn-sm" data-edit-task="${t.id}">Edit</button>
                   <button class="btn btn-danger btn-sm" data-delete-task="${t.id}">✕</button>
                 </div>
               </td>
@@ -805,10 +855,10 @@ const ProjectView = {
 
     tc.querySelectorAll('[data-delete-task]').forEach(btn => {
       btn.addEventListener('click', () => {
-        if (!UI.confirm('Eliminar esta tarefa?')) return;
+        if (!UI.confirm('Delete this task?')) return;
         DB.saveTasks(DB.tasks().filter(t => t.id !== btn.dataset.deleteTask));
         this._renderTab(proj.id);
-        UI.toast('Tarefa eliminada.', 'default');
+        UI.toast('Task deleted.', 'default');
       });
     });
   },
@@ -880,7 +930,7 @@ const ProjectView = {
       <div class="gantt-wrap">
         <div class="gantt">
           <div class="gantt-header-row">
-            <div class="gantt-label-col">Tarefa</div>
+            <div class="gantt-label-col">Task</div>
             <div class="gantt-timeline-col" style="position:relative">
               ${monthMarkersHtml}
               ${showToday ? `<div class="gantt-today-line" style="left:${todayPct}%"></div>` : ''}
@@ -907,25 +957,25 @@ const ProjectView = {
       tc.innerHTML = `
         <div class="action-controls">
           <div class="action-filters">
-            <button class="filter-tab ${filterStatus === 'all' ? 'active' : ''}" data-status="all">Todos (${all.length})</button>
-            <button class="filter-tab ${filterStatus === 'open' ? 'active' : ''}" data-status="open">Abertos</button>
-            <button class="filter-tab ${filterStatus === 'in-progress' ? 'active' : ''}" data-status="in-progress">Em Curso</button>
-            <button class="filter-tab ${filterStatus === 'done' ? 'active' : ''}" data-status="done">Feitos</button>
+            <button class="filter-tab ${filterStatus === 'all' ? 'active' : ''}" data-status="all">All (${all.length})</button>
+            <button class="filter-tab ${filterStatus === 'open' ? 'active' : ''}" data-status="open">Open</button>
+            <button class="filter-tab ${filterStatus === 'in-progress' ? 'active' : ''}" data-status="in-progress">In Progress</button>
+            <button class="filter-tab ${filterStatus === 'done' ? 'active' : ''}" data-status="done">Done</button>
           </div>
           <div style="display:flex;gap:6px">
             <select class="search-box" id="filter-priority" style="width:auto">
-              <option value="all">Todas as prioridades</option>
+              <option value="all">All priorities</option>
               ${PRIORITIES.map(p => `<option value="${p}" ${filterPriority === p ? 'selected' : ''}>${p[0].toUpperCase() + p.slice(1)}</option>`).join('')}
             </select>
-            <button class="btn btn-primary btn-sm" id="btn-add-action">+ Acção</button>
+            <button class="btn btn-primary btn-sm" id="btn-add-action">+ Action</button>
           </div>
         </div>
-        ${overdueCount > 0 ? `<div style="background:#fee2e2;border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-size:13px;color:#dc2626;font-weight:700">⚠ ${overdueCount} acção(ões) em atraso</div>` : ''}
+        ${overdueCount > 0 ? `<div style="background:#fee2e2;border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-size:13px;color:#dc2626;font-weight:700">⚠ ${overdueCount} overdue action(s)</div>` : ''}
         ${list.length ? `
           <div class="section-card">
             <table class="data-table">
               <thead>
-                <tr><th>#</th><th>Descrição</th><th>Responsável</th><th>Prazo</th><th>Prioridade</th><th>Estado</th><th></th></tr>
+                <tr><th>#</th><th>Description</th><th>Owner</th><th>Due Date</th><th>Priority</th><th>Status</th><th></th></tr>
               </thead>
               <tbody>
                 ${list.map((a, i) => {
@@ -944,7 +994,7 @@ const ProjectView = {
                     <td>${actionStatusBadge(a.status)}</td>
                     <td>
                       <div class="actions-cell">
-                        <button class="btn btn-secondary btn-sm" data-edit-action="${a.id}">Editar</button>
+                        <button class="btn btn-secondary btn-sm" data-edit-action="${a.id}">Edit</button>
                         <button class="btn btn-danger btn-sm" data-delete-action="${a.id}">✕</button>
                       </div>
                     </td>
@@ -953,7 +1003,7 @@ const ProjectView = {
               </tbody>
             </table>
           </div>
-        ` : `<div class="empty-state"><div class="empty-state-icon">✅</div><p>Sem acções para os filtros seleccionados.</p></div>`}
+        ` : `<div class="empty-state"><div class="empty-state-icon">✅</div><p>No actions for the selected filters.</p></div>`}
       `;
 
       tc.querySelectorAll('[data-status]').forEach(btn => {
@@ -963,9 +1013,9 @@ const ProjectView = {
       document.getElementById('btn-add-action')?.addEventListener('click', () => ActionModal.open(proj.id, null, render));
       tc.querySelectorAll('[data-edit-action]').forEach(btn => btn.addEventListener('click', () => ActionModal.open(proj.id, btn.dataset.editAction, render)));
       tc.querySelectorAll('[data-delete-action]').forEach(btn => btn.addEventListener('click', () => {
-        if (!UI.confirm('Eliminar esta acção?')) return;
+        if (!UI.confirm('Delete this action?')) return;
         DB.saveActionItems(DB.actionItems().filter(a => a.id !== btn.dataset.deleteAction));
-        UI.toast('Acção eliminada.', 'default');
+        UI.toast('Action deleted.', 'default');
         render();
       }));
     };
@@ -984,19 +1034,19 @@ const ProjectView = {
     tc.innerHTML = `
       <div class="budget-summary">
         <div class="budget-stat">
-          <div class="budget-stat-label">Orçamento Planeado</div>
+          <div class="budget-stat-label">Planned Budget</div>
           <div class="budget-stat-value">${fmt(totalPlanned)}</div>
         </div>
         <div class="budget-stat">
-          <div class="budget-stat-label">Gasto Real</div>
+          <div class="budget-stat-label">Actual Spend</div>
           <div class="budget-stat-value">${fmt(totalActual)}</div>
         </div>
         <div class="budget-stat">
-          <div class="budget-stat-label">Variação</div>
+          <div class="budget-stat-label">Variance</div>
           <div class="budget-stat-value ${variance < 0 ? 'negative' : ''}">${variance >= 0 ? '+' : ''}${fmt(variance)}</div>
         </div>
         <div class="budget-stat">
-          <div class="budget-stat-label">Utilização</div>
+          <div class="budget-stat-label">Utilisation</div>
           <div class="budget-stat-value">${utilPct}%</div>
           <div style="margin-top:6px">${progressBar(utilPct)}</div>
         </div>
@@ -1004,13 +1054,13 @@ const ProjectView = {
 
       <div class="section-card">
         <div class="section-card-header">
-          <h3>Detalhe por Categoria</h3>
-          <button class="btn btn-primary btn-sm" id="btn-add-budget">+ Categoria</button>
+          <h3>Breakdown by Category</h3>
+          <button class="btn btn-primary btn-sm" id="btn-add-budget">+ Category</button>
         </div>
         ${items.length ? `
           <table class="data-table">
             <thead>
-              <tr><th>Categoria</th><th>Planeado</th><th>Real</th><th>Variação</th><th>Utilização</th><th>Notas</th><th></th></tr>
+              <tr><th>Category</th><th>Planned</th><th>Actual</th><th>Variance</th><th>Utilisation</th><th>Notes</th><th></th></tr>
             </thead>
             <tbody>
               ${items.map(b => {
@@ -1025,7 +1075,7 @@ const ProjectView = {
                   <td style="font-size:12px;color:var(--mid)">${b.notes || '—'}</td>
                   <td>
                     <div class="actions-cell">
-                      <button class="btn btn-secondary btn-sm" data-edit-budget="${b.id}">Editar</button>
+                      <button class="btn btn-secondary btn-sm" data-edit-budget="${b.id}">Edit</button>
                       <button class="btn btn-danger btn-sm" data-delete-budget="${b.id}">✕</button>
                     </div>
                   </td>
@@ -1041,16 +1091,16 @@ const ProjectView = {
               </tr>
             </tbody>
           </table>
-        ` : `<div class="empty-state"><div class="empty-state-icon">💰</div><p>Sem itens orçamentais. Adicione categorias para controlar os gastos.</p></div>`}
+        ` : `<div class="empty-state"><div class="empty-state-icon">💰</div><p>No budget items. Add categories to track spending.</p></div>`}
       </div>
     `;
 
     document.getElementById('btn-add-budget')?.addEventListener('click', () => BudgetModal.open(proj.id, null, () => this._renderTab(proj.id)));
     tc.querySelectorAll('[data-edit-budget]').forEach(btn => btn.addEventListener('click', () => BudgetModal.open(proj.id, btn.dataset.editBudget, () => this._renderTab(proj.id))));
     tc.querySelectorAll('[data-delete-budget]').forEach(btn => btn.addEventListener('click', () => {
-      if (!UI.confirm('Eliminar esta categoria?')) return;
+      if (!UI.confirm('Delete this category?')) return;
       DB.saveBudgetItems(DB.budgetItems().filter(b => b.id !== btn.dataset.deleteBudget));
-      UI.toast('Categoria eliminada.', 'default');
+      UI.toast('Category deleted.', 'default');
       this._renderTab(proj.id);
     }));
   },
@@ -1062,7 +1112,7 @@ const ProjectView = {
     tc.innerHTML = `
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div style="flex:1;min-width:260px">
-          <div style="font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--mid);margin-bottom:12px">Documentos Gerados (${docs.length})</div>
+          <div style="font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--mid);margin-bottom:12px">Generated Documents (${docs.length})</div>
           ${docs.length ? `
             <div class="doc-grid">
               ${docs.map(d => `
@@ -1073,10 +1123,10 @@ const ProjectView = {
                 </div>
               `).join('')}
             </div>
-          ` : `<div class="empty-state" style="padding:32px 0"><p style="font-size:13px">Nenhum documento gerado ainda.</p></div>`}
+          ` : `<div class="empty-state" style="padding:32px 0"><p style="font-size:13px">No documents generated yet.</p></div>`}
         </div>
         <div style="flex-shrink:0;min-width:220px">
-          <div style="font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--mid);margin-bottom:12px">Gerar Documento</div>
+          <div style="font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--mid);margin-bottom:12px">Generate Document</div>
           <div class="template-grid" style="grid-template-columns:1fr">
             ${Object.entries(DOC_TYPES).map(([type, info]) => `
               <div class="template-card" data-new-doc="${type}">
@@ -1109,17 +1159,17 @@ const ProjectView = {
 const ProjectModal = {
   open(projectId) {
     const proj = projectId ? DB.projectById(projectId) : null;
-    const title = proj ? 'Editar Projecto' : 'Novo Projecto';
+    const title = proj ? 'Edit Project' : 'New Project';
 
     const body = `
       <form id="form-project">
         <div class="form-row">
           <div class="form-field">
-            <label>Nome do Projecto *</label>
+            <label>Project Name *</label>
             <input name="name" required value="${proj?.name || ''}">
           </div>
           <div class="form-field">
-            <label>Cliente *</label>
+            <label>Client *</label>
             <input name="client" required value="${proj?.client || ''}">
           </div>
         </div>
@@ -1131,7 +1181,7 @@ const ProjectModal = {
             </select>
           </div>
           <div class="form-field">
-            <label>Estado</label>
+            <label>Status</label>
             <select name="status">
               ${PROJECT_STATUSES.map(s => `<option value="${s}" ${(proj?.status || 'active') === s ? 'selected' : ''}>${statusLabel(s)}</option>`).join('')}
             </select>
@@ -1139,33 +1189,33 @@ const ProjectModal = {
         </div>
         <div class="form-row">
           <div class="form-field">
-            <label>Responsável</label>
+            <label>Lead</label>
             <select name="lead">
               ${USERS.map(u => `<option value="${u.name}" ${proj?.lead === u.name ? 'selected' : ''}>${u.name}</option>`).join('')}
             </select>
           </div>
           <div class="form-field">
-            <label>Orçamento (€)</label>
+            <label>Budget (€)</label>
             <input name="budget" type="number" min="0" value="${proj?.budget || ''}">
           </div>
         </div>
         <div class="form-row">
           <div class="form-field">
-            <label>Data de Início</label>
+            <label>Start Date</label>
             <input name="startDate" type="date" value="${proj?.startDate || ''}">
           </div>
           <div class="form-field">
-            <label>Data de Conclusão</label>
+            <label>End Date</label>
             <input name="endDate" type="date" value="${proj?.endDate || ''}">
           </div>
         </div>
         <div class="form-field">
-          <label>Descrição</label>
+          <label>Description</label>
           <textarea name="description" rows="4">${proj?.description || ''}</textarea>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
-          <button type="button" class="btn btn-secondary" id="modal-cancel">Cancelar</button>
-          <button type="submit" class="btn btn-primary">${proj ? 'Guardar Alterações' : 'Criar Projecto'}</button>
+          <button type="button" class="btn btn-secondary" id="modal-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">${proj ? 'Save Changes' : 'Create Project'}</button>
         </div>
       </form>
     `;
@@ -1184,12 +1234,12 @@ const ProjectModal = {
         const idx = projects.findIndex(p => p.id === proj.id);
         projects[idx] = { ...proj, ...data };
         DB.saveProjects(projects);
-        UI.toast('Projecto actualizado.', 'success');
+        UI.toast('Project updated.', 'success');
         Router.go('project', proj.id);
       } else {
         const newProj = { ...data, id: 'proj-' + DB.uid(), createdAt: new Date().toISOString() };
         DB.saveProjects([...projects, newProj]);
-        UI.toast('Projecto criado.', 'success');
+        UI.toast('Project created.', 'success');
         Router.go('project', newProj.id);
       }
       UI.closeModal();
@@ -1206,18 +1256,18 @@ const TaskModal = {
     const body = `
       <form id="form-task">
         <div class="form-field">
-          <label>Nome da Tarefa *</label>
+          <label>Task Name *</label>
           <input name="name" required value="${task?.name || ''}">
         </div>
         <div class="form-row">
           <div class="form-field">
-            <label>Fase</label>
+            <label>Phase</label>
             <select name="phase">
               ${PHASES.map(p => `<option value="${p}" ${task?.phase === p ? 'selected' : ''}>${p}</option>`).join('')}
             </select>
           </div>
           <div class="form-field">
-            <label>Responsável</label>
+            <label>Assignee</label>
             <select name="assignee">
               ${USERS.map(u => `<option value="${u.name}" ${task?.assignee === u.name ? 'selected' : ''}>${u.name}</option>`).join('')}
             </select>
@@ -1225,34 +1275,34 @@ const TaskModal = {
         </div>
         <div class="form-row">
           <div class="form-field">
-            <label>Início *</label>
+            <label>Start Date *</label>
             <input name="startDate" type="date" required value="${task?.startDate || ''}">
           </div>
           <div class="form-field">
-            <label>Conclusão *</label>
+            <label>Due Date *</label>
             <input name="dueDate" type="date" required value="${task?.dueDate || ''}">
           </div>
         </div>
         <div class="form-row">
           <div class="form-field">
-            <label>Estado</label>
+            <label>Status</label>
             <select name="status">
               ${TASK_STATUSES.map(s => `<option value="${s}" ${task?.status === s ? 'selected' : ''}>${s}</option>`).join('')}
             </select>
           </div>
           <div class="form-field">
-            <label>Conclusão (%)</label>
+            <label>Completion (%)</label>
             <input name="percentDone" type="number" min="0" max="100" value="${task?.percentDone ?? 0}">
           </div>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
-          <button type="button" class="btn btn-secondary" id="task-cancel">Cancelar</button>
-          <button type="submit" class="btn btn-primary">${task ? 'Guardar' : 'Adicionar'}</button>
+          <button type="button" class="btn btn-secondary" id="task-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">${task ? 'Save' : 'Add'}</button>
         </div>
       </form>
     `;
 
-    UI.openModal(task ? 'Editar Tarefa' : 'Nova Tarefa', body);
+    UI.openModal(task ? 'Edit Task' : 'New Task', body);
     document.getElementById('task-cancel').addEventListener('click', UI.closeModal.bind(UI));
     document.getElementById('form-task').addEventListener('submit', e => {
       e.preventDefault();
@@ -1270,7 +1320,7 @@ const TaskModal = {
       }
       DB.saveTasks(tasks);
       UI.closeModal();
-      UI.toast(task ? 'Tarefa actualizada.' : 'Tarefa adicionada.', 'success');
+      UI.toast(task ? 'Task updated.' : 'Task added.', 'success');
       onSave?.();
     });
   },
@@ -1285,47 +1335,47 @@ const ActionModal = {
     const body = `
       <form id="form-action">
         <div class="form-field">
-          <label>Descrição *</label>
+          <label>Description *</label>
           <textarea name="description" rows="3" required>${action?.description || ''}</textarea>
         </div>
         <div class="form-row">
           <div class="form-field">
-            <label>Responsável</label>
+            <label>Owner</label>
             <select name="owner">
               ${USERS.map(u => `<option value="${u.name}" ${action?.owner === u.name ? 'selected' : ''}>${u.name}</option>`).join('')}
             </select>
           </div>
           <div class="form-field">
-            <label>Prazo *</label>
+            <label>Due Date *</label>
             <input name="dueDate" type="date" required value="${action?.dueDate || ''}">
           </div>
         </div>
         <div class="form-row">
           <div class="form-field">
-            <label>Prioridade</label>
+            <label>Priority</label>
             <select name="priority">
               ${PRIORITIES.map(p => `<option value="${p}" ${action?.priority === p ? 'selected' : ''}>${p[0].toUpperCase() + p.slice(1)}</option>`).join('')}
             </select>
           </div>
           <div class="form-field">
-            <label>Estado</label>
+            <label>Status</label>
             <select name="status">
               ${ACTION_STATUSES.map(s => `<option value="${s}" ${action?.status === s ? 'selected' : ''}>${s[0].toUpperCase() + s.slice(1)}</option>`).join('')}
             </select>
           </div>
         </div>
         <div class="form-field">
-          <label>Notas</label>
+          <label>Notes</label>
           <input name="notes" value="${action?.notes || ''}">
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
-          <button type="button" class="btn btn-secondary" id="action-cancel">Cancelar</button>
-          <button type="submit" class="btn btn-primary">${action ? 'Guardar' : 'Adicionar'}</button>
+          <button type="button" class="btn btn-secondary" id="action-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">${action ? 'Save' : 'Add'}</button>
         </div>
       </form>
     `;
 
-    UI.openModal(action ? 'Editar Acção' : 'Nova Acção', body);
+    UI.openModal(action ? 'Edit Action' : 'New Action', body);
     document.getElementById('action-cancel').addEventListener('click', UI.closeModal.bind(UI));
     document.getElementById('form-action').addEventListener('submit', e => {
       e.preventDefault();
@@ -1342,7 +1392,7 @@ const ActionModal = {
       }
       DB.saveActionItems(items);
       UI.closeModal();
-      UI.toast(action ? 'Acção actualizada.' : 'Acção adicionada.', 'success');
+      UI.toast(action ? 'Action updated.' : 'Action added.', 'success');
       onSave?.();
     });
   },
@@ -1357,33 +1407,33 @@ const BudgetModal = {
     const body = `
       <form id="form-budget">
         <div class="form-field">
-          <label>Categoria</label>
+          <label>Category</label>
           <select name="category">
             ${BUDGET_CATEGORIES.map(c => `<option value="${c}" ${item?.category === c ? 'selected' : ''}>${c}</option>`).join('')}
           </select>
         </div>
         <div class="form-row">
           <div class="form-field">
-            <label>Valor Planeado (€) *</label>
+            <label>Planned Value (€) *</label>
             <input name="planned" type="number" min="0" required value="${item?.planned || ''}">
           </div>
           <div class="form-field">
-            <label>Valor Real (€)</label>
+            <label>Actual Value (€)</label>
             <input name="actual" type="number" min="0" value="${item?.actual || 0}">
           </div>
         </div>
         <div class="form-field">
-          <label>Notas</label>
+          <label>Notes</label>
           <input name="notes" value="${item?.notes || ''}">
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
-          <button type="button" class="btn btn-secondary" id="budget-cancel">Cancelar</button>
-          <button type="submit" class="btn btn-primary">${item ? 'Guardar' : 'Adicionar'}</button>
+          <button type="button" class="btn btn-secondary" id="budget-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">${item ? 'Save' : 'Add'}</button>
         </div>
       </form>
     `;
 
-    UI.openModal(item ? 'Editar Categoria' : 'Nova Categoria', body);
+    UI.openModal(item ? 'Edit Category' : 'New Category', body);
     document.getElementById('budget-cancel').addEventListener('click', UI.closeModal.bind(UI));
     document.getElementById('form-budget').addEventListener('submit', e => {
       e.preventDefault();
@@ -1402,7 +1452,7 @@ const BudgetModal = {
       }
       DB.saveBudgetItems(items);
       UI.closeModal();
-      UI.toast(item ? 'Categoria actualizada.' : 'Categoria adicionada.', 'success');
+      UI.toast(item ? 'Category updated.' : 'Category added.', 'success');
       onSave?.();
     });
   },
@@ -1573,6 +1623,188 @@ const DocGenerator = {
         ${bodyHtml}
 
         <div class="doc-confidential">Confidencial — A10 Consulting · Uso Restrito</div>
+      </div>
+    `;
+  },
+};
+
+
+/* ── Clients View ──────────────────────────────────────────── */
+
+const ClientsView = {
+  render() {
+    const clients = DB.clients();
+    document.getElementById('main-content').innerHTML = `
+      <div class="section-card">
+        ${clients.length ? `
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Sector</th><th>Contact</th><th>Email</th><th>Phone</th><th>Country</th><th>Notes</th><th></th></tr></thead>
+            <tbody>
+              ${clients.map(c => `<tr>
+                <td style="font-weight:700">${c.name}</td>
+                <td style="font-size:12px;color:var(--mid)">${c.sector}</td>
+                <td style="font-size:13px">${c.contact}</td>
+                <td style="font-size:12px"><a href="mailto:${c.email}" style="color:var(--accent)">${c.email}</a></td>
+                <td style="font-size:12px;color:var(--mid);white-space:nowrap">${c.phone}</td>
+                <td style="font-size:12px;color:var(--mid)">${c.country}</td>
+                <td style="font-size:12px;color:var(--mid);max-width:180px">${c.notes || '—'}</td>
+                <td><div class="actions-cell">
+                  <button class="btn btn-secondary btn-sm" data-edit-client="${c.id}">Edit</button>
+                  <button class="btn btn-danger btn-sm" data-delete-client="${c.id}">X</button>
+                </div></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        ` : `<div class="empty-state"><div class="empty-state-icon">🏢</div><p>No clients yet.</p></div>`}
+      </div>
+    `;
+    document.querySelectorAll('[data-edit-client]').forEach(btn => btn.addEventListener('click', () => this.openModal(btn.dataset.editClient)));
+    document.querySelectorAll('[data-delete-client]').forEach(btn => btn.addEventListener('click', () => {
+      if (!UI.confirm('Delete this client?')) return;
+      DB.saveClients(DB.clients().filter(c => c.id !== btn.dataset.deleteClient));
+      UI.toast('Client deleted.', 'default'); this.render();
+    }));
+  },
+  openModal(clientId) {
+    const c = clientId ? DB.clients().find(x => x.id === clientId) : null;
+    UI.openModal(c ? 'Edit Client' : 'New Client', `
+      <form id="form-client">
+        <div class="form-row">
+          <div class="form-field"><label>Company Name *</label><input name="name" required value="${c?.name || ''}"></div>
+          <div class="form-field"><label>Sector</label>
+            <select name="sector">${SECTORS.map(s => `<option value="${s}" ${c?.sector === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field"><label>Contact Person</label><input name="contact" value="${c?.contact || ''}"></div>
+          <div class="form-field"><label>Email</label><input name="email" type="email" value="${c?.email || ''}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-field"><label>Phone</label><input name="phone" value="${c?.phone || ''}"></div>
+          <div class="form-field"><label>Country</label><input name="country" value="${c?.country || ''}"></div>
+        </div>
+        <div class="form-field"><label>Notes</label><textarea name="notes" rows="2">${c?.notes || ''}</textarea></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button type="button" class="btn btn-secondary" id="modal-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">${c ? 'Save Changes' : 'Add Client'}</button>
+        </div>
+      </form>
+    `);
+    document.getElementById('modal-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('form-client').addEventListener('submit', e => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      const clients = DB.clients();
+      if (c) { const idx = clients.findIndex(x => x.id === c.id); clients[idx] = { ...c, ...data }; }
+      else clients.push({ ...data, id: 'cli-' + DB.uid() });
+      DB.saveClients(clients);
+      UI.closeModal();
+      UI.toast(c ? 'Client updated.' : 'Client added.', 'success');
+      this.render();
+    });
+  },
+};
+
+/* ── Suppliers View ────────────────────────────────────────── */
+
+const SUPPLIER_CATEGORIES = ['Technical Services', 'Logistics', 'Technology', 'Construction', 'Professional Services', 'Materials'];
+
+const SuppliersView = {
+  render() {
+    const suppliers = DB.suppliers();
+    document.getElementById('main-content').innerHTML = `
+      <div class="section-card">
+        ${suppliers.length ? `
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Category</th><th>Contact</th><th>Email</th><th>Phone</th><th>Country</th><th>Notes</th><th></th></tr></thead>
+            <tbody>
+              ${suppliers.map(s => `<tr>
+                <td style="font-weight:700">${s.name}</td>
+                <td style="font-size:12px;color:var(--mid)">${s.category}</td>
+                <td style="font-size:13px">${s.contact}</td>
+                <td style="font-size:12px"><a href="mailto:${s.email}" style="color:var(--accent)">${s.email}</a></td>
+                <td style="font-size:12px;color:var(--mid);white-space:nowrap">${s.phone}</td>
+                <td style="font-size:12px;color:var(--mid)">${s.country}</td>
+                <td style="font-size:12px;color:var(--mid);max-width:180px">${s.notes || '—'}</td>
+                <td><div class="actions-cell">
+                  <button class="btn btn-secondary btn-sm" data-edit-supplier="${s.id}">Edit</button>
+                  <button class="btn btn-danger btn-sm" data-delete-supplier="${s.id}">X</button>
+                </div></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        ` : `<div class="empty-state"><div class="empty-state-icon">🚚</div><p>No suppliers yet.</p></div>`}
+      </div>
+    `;
+    document.querySelectorAll('[data-edit-supplier]').forEach(btn => btn.addEventListener('click', () => this.openModal(btn.dataset.editSupplier)));
+    document.querySelectorAll('[data-delete-supplier]').forEach(btn => btn.addEventListener('click', () => {
+      if (!UI.confirm('Delete this supplier?')) return;
+      DB.saveSuppliers(DB.suppliers().filter(s => s.id !== btn.dataset.deleteSupplier));
+      UI.toast('Supplier deleted.', 'default'); this.render();
+    }));
+  },
+  openModal(supplierId) {
+    const s = supplierId ? DB.suppliers().find(x => x.id === supplierId) : null;
+    UI.openModal(s ? 'Edit Supplier' : 'New Supplier', `
+      <form id="form-supplier">
+        <div class="form-row">
+          <div class="form-field"><label>Company Name *</label><input name="name" required value="${s?.name || ''}"></div>
+          <div class="form-field"><label>Category</label>
+            <select name="category">${SUPPLIER_CATEGORIES.map(cat => `<option value="${cat}" ${s?.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}</select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field"><label>Contact Person</label><input name="contact" value="${s?.contact || ''}"></div>
+          <div class="form-field"><label>Email</label><input name="email" type="email" value="${s?.email || ''}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-field"><label>Phone</label><input name="phone" value="${s?.phone || ''}"></div>
+          <div class="form-field"><label>Country</label><input name="country" value="${s?.country || ''}"></div>
+        </div>
+        <div class="form-field"><label>Notes</label><textarea name="notes" rows="2">${s?.notes || ''}</textarea></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button type="button" class="btn btn-secondary" id="modal-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">${s ? 'Save Changes' : 'Add Supplier'}</button>
+        </div>
+      </form>
+    `);
+    document.getElementById('modal-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('form-supplier').addEventListener('submit', e => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      const suppliers = DB.suppliers();
+      if (s) { const idx = suppliers.findIndex(x => x.id === s.id); suppliers[idx] = { ...s, ...data }; }
+      else suppliers.push({ ...data, id: 'sup-' + DB.uid() });
+      DB.saveSuppliers(suppliers);
+      UI.closeModal();
+      UI.toast(s ? 'Supplier updated.' : 'Supplier added.', 'success');
+      this.render();
+    });
+  },
+};
+
+/* ── Users View ────────────────────────────────────────────── */
+
+const UsersView = {
+  render() {
+    const session = Auth.current();
+    document.getElementById('main-content').innerHTML = `
+      <div class="section-card">
+        <div class="section-card-header"><h3>Platform Users</h3></div>
+        <table class="data-table">
+          <thead><tr><th></th><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+          <tbody>
+            ${USERS.map(u => `<tr ${u.email === session?.email ? 'style="background:var(--grey)"' : ''}>
+              <td><div style="width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">${u.avatar}</div></td>
+              <td style="font-weight:700">${u.name}${u.email === session?.email ? ' <span style="font-size:11px;color:var(--mid);font-weight:400">(you)</span>' : ''}</td>
+              <td style="font-size:13px">${u.email}</td>
+              <td><span class="badge ${u.role === 'admin' ? 'badge-active' : 'badge-in-progress'}">${u.role}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        <div style="padding:14px 18px;font-size:12px;color:var(--mid);border-top:1px solid var(--border)">
+          User accounts are configured in the application source. Contact your administrator to add or modify users.
+        </div>
       </div>
     `;
   },

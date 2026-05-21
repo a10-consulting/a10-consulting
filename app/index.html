@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,8 +15,8 @@
     <span class="brand-sub">Projects</span>
   </div>
   <div class="login-card">
-    <h2>Acesso à Plataforma</h2>
-    <p class="login-subtitle">Restrito à equipa A10 Consulting.</p>
+    <h2>Platform Access</h2>
+    <p class="login-subtitle">Restricted to the A10 Consulting team.</p>
     <form id="form-login" autocomplete="on">
       <div class="form-field">
         <label for="inp-email">Email</label>
@@ -26,8 +26,8 @@
         <label for="inp-password">Password</label>
         <input id="inp-password" type="password" name="password" autocomplete="current-password" placeholder="••••••••" required>
       </div>
-      <p id="login-error" class="login-error hidden">Email ou password incorrectos.</p>
-      <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+      <p id="login-error" class="login-error hidden">Incorrect email or password.</p>
+      <button type="submit" class="btn btn-primary btn-block">Sign In</button>
     </form>
     <p class="login-hint">admin@a10-consulting.com / a10admin2026</p>
   </div>
@@ -45,9 +45,27 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Dashboard
       </a>
+      <a class="nav-item" data-route="active-projects">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Active Projects
+      </a>
       <a class="nav-item" data-route="reports">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        Relatórios
+        Reports
+      </a>
+      <div class="nav-divider"></div>
+      <div class="nav-section-label">Management</div>
+      <a class="nav-item" data-route="clients">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Clients
+      </a>
+      <a class="nav-item" data-route="suppliers">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        Suppliers
+      </a>
+      <a class="nav-item" data-route="users">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Users
       </a>
     </nav>
     <div class="sidebar-footer">
@@ -55,7 +73,7 @@
         <div class="user-avatar" id="user-avatar">AC</div>
         <div class="user-meta">
           <div class="user-name" id="user-name">Admin</div>
-          <button class="btn-logout" id="btn-logout">Sair</button>
+          <button class="btn-logout" id="btn-logout">Sign Out</button>
         </div>
       </div>
     </div>
@@ -68,7 +86,7 @@
         <h1 class="page-title" id="page-title">Dashboard</h1>
       </div>
       <div class="header-actions" id="header-actions">
-        <button class="btn btn-primary" id="btn-new-project">+ Novo Projecto</button>
+        <button class="btn btn-primary" id="btn-new-project">+ New Project</button>
       </div>
     </header>
     <main class="main-content" id="main-content"></main>
@@ -80,7 +98,7 @@
   <div class="modal-box" id="modal-box">
     <div class="modal-header">
       <h3 id="modal-title">Modal</h3>
-      <button class="modal-close" id="modal-close" aria-label="Fechar">&times;</button>
+      <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body" id="modal-body"></div>
   </div>
@@ -90,10 +108,10 @@
 <div id="doc-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
   <div class="modal-box modal-wide" id="doc-box">
     <div class="modal-header no-print">
-      <h3 id="doc-title">Documento</h3>
+      <h3 id="doc-title">Document</h3>
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-primary btn-sm" onclick="window.print()">Imprimir / PDF</button>
-        <button class="modal-close" id="doc-close" aria-label="Fechar">&times;</button>
+        <button class="btn btn-primary btn-sm" id="btn-print-doc">Print / PDF</button>
+        <button class="modal-close" id="doc-close" aria-label="Close">&times;</button>
       </div>
     </div>
     <div class="modal-body" id="doc-body"></div>
