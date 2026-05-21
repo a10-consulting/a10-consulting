@@ -372,17 +372,17 @@ function fmt(n) {
 function fmtDate(str) {
   if (!str) return '—';
   const d = new Date(str);
-  return d.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function fmtDateShort(str) {
   if (!str) return '';
   const d = new Date(str);
-  return d.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
 }
 
 function fmtMonthYear(d) {
-  return d.toLocaleDateString('pt-PT', { month: 'short', year: '2-digit' });
+  return d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' });
 }
 
 function parseDate(str) {
@@ -1467,54 +1467,54 @@ const DocGenerator = {
 
     if (type === 'project-brief') {
       fieldsHtml = `
-        <div class="form-field"><label>Título do Documento</label><input name="title" value="Project Brief — ${proj.name}"></div>
-        <div class="form-field"><label>Objectivo</label><textarea name="objective" rows="3" placeholder="Descreva o objectivo principal do projecto..."></textarea></div>
-        <div class="form-field"><label>Âmbito</label><textarea name="scope" rows="3" placeholder="Defina o âmbito do trabalho..."></textarea></div>
-        <div class="form-field"><label>Deliverables (um por linha)</label><textarea name="deliverables" rows="4" placeholder="1. Relatório de diagnóstico&#10;2. Roadmap de implementação..."></textarea></div>
+        <div class="form-field"><label>Document Title</label><input name="title" value="Project Brief — ${proj.name}"></div>
+        <div class="form-field"><label>Objective</label><textarea name="objective" rows="3" placeholder="Describe the main objective of the project..."></textarea></div>
+        <div class="form-field"><label>Scope</label><textarea name="scope" rows="3" placeholder="Define the scope of work..."></textarea></div>
+        <div class="form-field"><label>Deliverables (one per line)</label><textarea name="deliverables" rows="4" placeholder="1. Diagnostic report&#10;2. Implementation roadmap..."></textarea></div>
         <div class="form-field"><label>Timeline</label><input name="timeline" value="${fmtDate(proj.startDate)} – ${fmtDate(proj.endDate)}"></div>
-        <div class="form-field"><label>Equipa</label><input name="team" value="${proj.lead}"></div>
-        <div class="form-field"><label>Termos Comerciais</label><textarea name="commercial" rows="2"></textarea></div>
+        <div class="form-field"><label>Team</label><input name="team" value="${proj.lead}"></div>
+        <div class="form-field"><label>Commercial Terms</label><textarea name="commercial" rows="2"></textarea></div>
       `;
     } else if (type === 'status-report') {
       fieldsHtml = `
-        <div class="form-field"><label>Título</label><input name="title" value="Status Report — ${proj.name}"></div>
-        <div class="form-field"><label>Período de Reporte</label><input name="period" placeholder="Semana terminada em ..."></div>
-        <div class="form-field"><label>Sumário Executivo</label><textarea name="summary" rows="3"></textarea></div>
-        <div class="form-field"><label>Concluído neste período</label><textarea name="completed" rows="3" placeholder="- Item 1&#10;- Item 2"></textarea></div>
-        <div class="form-field"><label>Planeado para próximo período</label><textarea name="planned" rows="3" placeholder="- Item 1&#10;- Item 2"></textarea></div>
-        <div class="form-field"><label>Riscos</label><textarea name="risks" rows="2"></textarea></div>
+        <div class="form-field"><label>Title</label><input name="title" value="Status Report — ${proj.name}"></div>
+        <div class="form-field"><label>Reporting Period</label><input name="period" placeholder="Week ending ..."></div>
+        <div class="form-field"><label>Executive Summary</label><textarea name="summary" rows="3"></textarea></div>
+        <div class="form-field"><label>Completed this period</label><textarea name="completed" rows="3" placeholder="- Item 1&#10;- Item 2"></textarea></div>
+        <div class="form-field"><label>Planned for next period</label><textarea name="planned" rows="3" placeholder="- Item 1&#10;- Item 2"></textarea></div>
+        <div class="form-field"><label>Risks</label><textarea name="risks" rows="2"></textarea></div>
         <div class="form-field"><label>Issues</label><textarea name="issues" rows="2"></textarea></div>
-        <div class="form-field"><label>Acções (para o cliente)</label><textarea name="actions" rows="2"></textarea></div>
+        <div class="form-field"><label>Actions (for client)</label><textarea name="actions" rows="2"></textarea></div>
       `;
     } else if (type === 'meeting-minutes') {
       fieldsHtml = `
-        <div class="form-field"><label>Título</label><input name="title" value="Acta de Reunião — ${proj.name}"></div>
-        <div class="form-field"><label>Data</label><input name="date" type="date" value="${new Date().toISOString().split('T')[0]}"></div>
-        <div class="form-field"><label>Local / Formato</label><input name="location" placeholder="Videochamada / Escritório cliente / ..."></div>
-        <div class="form-field"><label>Participantes</label><textarea name="attendees" rows="3" placeholder="Nome — Cargo&#10;Nome — Cargo"></textarea></div>
-        <div class="form-field"><label>Agenda</label><textarea name="agenda" rows="3" placeholder="1. Ponto 1&#10;2. Ponto 2"></textarea></div>
-        <div class="form-field"><label>Decisões Tomadas</label><textarea name="decisions" rows="3"></textarea></div>
-        <div class="form-field"><label>Acções (quem faz o quê até quando)</label><textarea name="actions" rows="3"></textarea></div>
-        <div class="form-field"><label>Próxima Reunião</label><input name="nextMeeting"></div>
+        <div class="form-field"><label>Title</label><input name="title" value="Meeting Minutes — ${proj.name}"></div>
+        <div class="form-field"><label>Date</label><input name="date" type="date" value="${new Date().toISOString().split('T')[0]}"></div>
+        <div class="form-field"><label>Location / Format</label><input name="location" placeholder="Video call / Client office / ..."></div>
+        <div class="form-field"><label>Attendees</label><textarea name="attendees" rows="3" placeholder="Name — Role&#10;Name — Role"></textarea></div>
+        <div class="form-field"><label>Agenda</label><textarea name="agenda" rows="3" placeholder="1. Item 1&#10;2. Item 2"></textarea></div>
+        <div class="form-field"><label>Decisions Made</label><textarea name="decisions" rows="3"></textarea></div>
+        <div class="form-field"><label>Actions (who does what by when)</label><textarea name="actions" rows="3"></textarea></div>
+        <div class="form-field"><label>Next Meeting</label><input name="nextMeeting"></div>
       `;
     } else if (type === 'engagement-letter') {
       fieldsHtml = `
-        <div class="form-field"><label>Título</label><input name="title" value="Proposta de Colaboração — ${proj.name}"></div>
-        <div class="form-field"><label>Contexto / Antecedentes</label><textarea name="context" rows="3"></textarea></div>
-        <div class="form-field"><label>Âmbito dos Serviços</label><textarea name="scope" rows="4"></textarea></div>
+        <div class="form-field"><label>Title</label><input name="title" value="Engagement Letter — ${proj.name}"></div>
+        <div class="form-field"><label>Context / Background</label><textarea name="context" rows="3"></textarea></div>
+        <div class="form-field"><label>Scope of Services</label><textarea name="scope" rows="4"></textarea></div>
         <div class="form-field"><label>Deliverables</label><textarea name="deliverables" rows="3"></textarea></div>
         <div class="form-field"><label>Timeline</label><input name="timeline" value="${fmtDate(proj.startDate)} – ${fmtDate(proj.endDate)}"></div>
-        <div class="form-field"><label>Honorários e Condições</label><textarea name="commercial" rows="3" placeholder="Honorários fixos de €... pagos em ..."></textarea></div>
-        <div class="form-field"><label>Condições Gerais</label><textarea name="terms" rows="3" placeholder="Confidencialidade, propriedade intelectual..."></textarea></div>
+        <div class="form-field"><label>Fees and Commercial Terms</label><textarea name="commercial" rows="3" placeholder="Fixed fee of €... payable in ..."></textarea></div>
+        <div class="form-field"><label>General Terms</label><textarea name="terms" rows="3" placeholder="Confidentiality, intellectual property..."></textarea></div>
       `;
     }
 
-    UI.openModal(`Novo ${info.label}`, `
+    UI.openModal(`New ${info.label}`, `
       <form id="form-doc">
         ${fieldsHtml}
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
-          <button type="button" class="btn btn-secondary" id="doc-cancel">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Gerar Documento</button>
+          <button type="button" class="btn btn-secondary" id="doc-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Generate Document</button>
         </div>
       </form>
     `, true);
@@ -1538,7 +1538,7 @@ const DocGenerator = {
 
       DB.saveDocuments([...DB.documents(), doc]);
       UI.closeModal();
-      UI.toast('Documento gerado.', 'success');
+      UI.toast('Document generated.', 'success');
       onSave?.();
       this.preview(doc, proj);
     });
@@ -1551,7 +1551,7 @@ const DocGenerator = {
 
   _generateHtml(doc, proj) {
     const c = doc.content;
-    const today = new Date().toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' });
+    const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
     const nl2li = (str) => str ? str.split('\n').filter(l => l.trim()).map(l => `<li>${l.replace(/^[-•]\s*/, '')}</li>`).join('') : '';
     const nl2p  = (str) => str ? str.split('\n').filter(l => l.trim()).map(l => `<p>${l}</p>`).join('') : '';
 
@@ -1559,47 +1559,47 @@ const DocGenerator = {
 
     if (doc.type === 'project-brief') {
       bodyHtml = `
-        <div class="doc-print-field"><div class="doc-print-field-label">Cliente</div><div class="doc-print-field-value">${proj.client}</div></div>
+        <div class="doc-print-field"><div class="doc-print-field-label">Client</div><div class="doc-print-field-value">${proj.client}</div></div>
         <div class="doc-print-field"><div class="doc-print-field-label">Sector</div><div class="doc-print-field-value">${proj.sector}</div></div>
-        <div class="doc-print-field"><div class="doc-print-field-label">Responsável A10</div><div class="doc-print-field-value">${proj.lead}</div></div>
-        <h2>Objectivo</h2><p>${c.objective}</p>
-        <h2>Âmbito</h2><p>${c.scope}</p>
+        <div class="doc-print-field"><div class="doc-print-field-label">A10 Lead</div><div class="doc-print-field-value">${proj.lead}</div></div>
+        <h2>Objective</h2><p>${c.objective}</p>
+        <h2>Scope</h2><p>${c.scope}</p>
         <h2>Deliverables</h2><ul>${nl2li(c.deliverables)}</ul>
         <h2>Timeline</h2><p>${c.timeline}</p>
-        <h2>Equipa</h2><p>${c.team}</p>
-        ${c.commercial ? `<h2>Termos Comerciais</h2><p>${c.commercial}</p>` : ''}
+        <h2>Team</h2><p>${c.team}</p>
+        ${c.commercial ? `<h2>Commercial Terms</h2><p>${c.commercial}</p>` : ''}
       `;
     } else if (doc.type === 'status-report') {
       const pct = DB.projectCompletion(proj.id);
       bodyHtml = `
-        <div class="doc-print-field"><div class="doc-print-field-label">Período</div><div class="doc-print-field-value">${c.period}</div></div>
-        <div class="doc-print-field"><div class="doc-print-field-label">Progresso Global</div><div class="doc-print-field-value">${pct}%</div></div>
-        <h2>Sumário Executivo</h2><p>${c.summary}</p>
-        <h2>Concluído Neste Período</h2><ul>${nl2li(c.completed)}</ul>
-        <h2>Planeado para Próximo Período</h2><ul>${nl2li(c.planned)}</ul>
-        ${c.risks ? `<h2>Riscos</h2><p>${c.risks}</p>` : ''}
+        <div class="doc-print-field"><div class="doc-print-field-label">Period</div><div class="doc-print-field-value">${c.period}</div></div>
+        <div class="doc-print-field"><div class="doc-print-field-label">Overall Progress</div><div class="doc-print-field-value">${pct}%</div></div>
+        <h2>Executive Summary</h2><p>${c.summary}</p>
+        <h2>Completed This Period</h2><ul>${nl2li(c.completed)}</ul>
+        <h2>Planned for Next Period</h2><ul>${nl2li(c.planned)}</ul>
+        ${c.risks ? `<h2>Risks</h2><p>${c.risks}</p>` : ''}
         ${c.issues ? `<h2>Issues</h2><p>${c.issues}</p>` : ''}
-        ${c.actions ? `<h2>Acções</h2><ul>${nl2li(c.actions)}</ul>` : ''}
+        ${c.actions ? `<h2>Actions</h2><ul>${nl2li(c.actions)}</ul>` : ''}
       `;
     } else if (doc.type === 'meeting-minutes') {
       bodyHtml = `
-        <div class="doc-print-field"><div class="doc-print-field-label">Data</div><div class="doc-print-field-value">${fmtDate(c.date)}</div></div>
-        <div class="doc-print-field"><div class="doc-print-field-label">Local / Formato</div><div class="doc-print-field-value">${c.location}</div></div>
-        <h2>Participantes</h2><ul>${nl2li(c.attendees)}</ul>
+        <div class="doc-print-field"><div class="doc-print-field-label">Date</div><div class="doc-print-field-value">${fmtDate(c.date)}</div></div>
+        <div class="doc-print-field"><div class="doc-print-field-label">Location / Format</div><div class="doc-print-field-value">${c.location}</div></div>
+        <h2>Attendees</h2><ul>${nl2li(c.attendees)}</ul>
         <h2>Agenda</h2><ul>${nl2li(c.agenda)}</ul>
-        <h2>Decisões Tomadas</h2>${nl2p(c.decisions)}
-        <h2>Acções</h2><ul>${nl2li(c.actions)}</ul>
-        ${c.nextMeeting ? `<h2>Próxima Reunião</h2><p>${c.nextMeeting}</p>` : ''}
+        <h2>Decisions Made</h2>${nl2p(c.decisions)}
+        <h2>Actions</h2><ul>${nl2li(c.actions)}</ul>
+        ${c.nextMeeting ? `<h2>Next Meeting</h2><p>${c.nextMeeting}</p>` : ''}
       `;
     } else if (doc.type === 'engagement-letter') {
       bodyHtml = `
-        <h2>Contexto</h2><p>${c.context}</p>
-        <h2>Âmbito dos Serviços</h2><p>${c.scope}</p>
+        <h2>Context</h2><p>${c.context}</p>
+        <h2>Scope of Services</h2><p>${c.scope}</p>
         <h2>Deliverables</h2><ul>${nl2li(c.deliverables)}</ul>
         <h2>Timeline</h2><p>${c.timeline}</p>
-        <h2>Honorários e Condições Comerciais</h2><p>${c.commercial}</p>
-        ${c.terms ? `<h2>Condições Gerais</h2><p>${c.terms}</p>` : ''}
-        <p style="margin-top:32px">A10 Consulting aguarda a confirmação da vossa aceitação desta proposta.</p>
+        <h2>Fees and Commercial Terms</h2><p>${c.commercial}</p>
+        ${c.terms ? `<h2>General Terms</h2><p>${c.terms}</p>` : ''}
+        <p style="margin-top:32px">A10 Consulting looks forward to your confirmation of acceptance of this engagement.</p>
       `;
     }
 
@@ -1622,7 +1622,7 @@ const DocGenerator = {
 
         ${bodyHtml}
 
-        <div class="doc-confidential">Confidencial — A10 Consulting · Uso Restrito</div>
+        <div class="doc-confidential">Confidential — A10 Consulting · Restricted Use</div>
       </div>
     `;
   },
@@ -1830,42 +1830,42 @@ const ReportsView = {
     document.getElementById('main-content').innerHTML = `
       <div class="stat-grid" style="margin-bottom:24px">
         <div class="stat-card">
-          <div class="stat-label">Orçamento Total</div>
+          <div class="stat-label">Total Budget</div>
           <div class="stat-value">${fmt(totalBudgetPlanned)}</div>
-          <div class="stat-sub">${fmt(totalBudgetSpent)} utilizado (${totalBudgetPlanned ? Math.round(totalBudgetSpent/totalBudgetPlanned*100) : 0}%)</div>
+          <div class="stat-sub">${fmt(totalBudgetSpent)} used (${totalBudgetPlanned ? Math.round(totalBudgetSpent/totalBudgetPlanned*100) : 0}%)</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Tarefas Concluídas</div>
+          <div class="stat-label">Tasks Completed</div>
           <div class="stat-value">${completedTasks}/${totalTasks}</div>
-          <div class="stat-sub">${totalTasks ? Math.round(completedTasks/totalTasks*100) : 0}% de conclusão global</div>
+          <div class="stat-sub">${totalTasks ? Math.round(completedTasks/totalTasks*100) : 0}% overall completion</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Acções Abertas</div>
+          <div class="stat-label">Open Actions</div>
           <div class="stat-value">${openActions}</div>
-          <div class="stat-sub">${criticalActions} críticas</div>
+          <div class="stat-sub">${criticalActions} critical</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Projectos Activos</div>
+          <div class="stat-label">Active Projects</div>
           <div class="stat-value">${projects.filter(p => p.status === 'active').length}</div>
-          <div class="stat-sub">${projects.length} no total</div>
+          <div class="stat-sub">${projects.length} total</div>
         </div>
       </div>
 
       <div class="reports-grid">
         <div class="chart-card">
-          <div class="chart-title">Projectos por Estado</div>
+          <div class="chart-title">Projects by Status</div>
           <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
         </div>
         <div class="chart-card">
-          <div class="chart-title">Orçamento: Planeado vs. Real por Projecto</div>
+          <div class="chart-title">Budget: Planned vs. Actual by Project</div>
           <div class="chart-wrap"><canvas id="chart-budget"></canvas></div>
         </div>
         <div class="chart-card">
-          <div class="chart-title">Progresso por Projecto (%)</div>
+          <div class="chart-title">Progress by Project (%)</div>
           <div class="chart-wrap"><canvas id="chart-progress"></canvas></div>
         </div>
         <div class="chart-card">
-          <div class="chart-title">Acções por Prioridade</div>
+          <div class="chart-title">Actions by Priority</div>
           <div class="chart-wrap"><canvas id="chart-actions"></canvas></div>
         </div>
       </div>
@@ -1889,7 +1889,7 @@ const ReportsView = {
     projects.forEach(p => { statusCounts[p.status] = (statusCounts[p.status] || 0) + 1; });
 
     A10Charts.doughnut('chart-status', {
-      labels: ['Activo', 'Em Pausa', 'Concluído', 'Rascunho'],
+      labels: ['Active', 'On Hold', 'Completed', 'Draft'],
       data:   [statusCounts.active, statusCounts['on-hold'], statusCounts.completed, statusCounts.draft],
       colors: [green, amber, mid, accent],
     });
@@ -1898,8 +1898,8 @@ const ReportsView = {
     A10Charts.bar('chart-budget', {
       labels: projects.map(p => p.name.length > 20 ? p.name.slice(0, 20) + '…' : p.name),
       datasets: [
-        { label: 'Planeado', data: projects.map(p => DB.projectPlanned(p.id)), backgroundColor: light },
-        { label: 'Real',     data: projects.map(p => DB.projectSpent(p.id)),   backgroundColor: accent },
+        { label: 'Planned', data: projects.map(p => DB.projectPlanned(p.id)), backgroundColor: light },
+        { label: 'Actual',  data: projects.map(p => DB.projectSpent(p.id)),   backgroundColor: accent },
       ],
       yTickFormat: v => `€${(v / 1000).toFixed(0)}k`,
     });
@@ -1908,7 +1908,7 @@ const ReportsView = {
     const colors3 = projects.map(p => p.status === 'completed' ? green : accent);
     A10Charts.barH('chart-progress', {
       labels: projects.map(p => p.name.length > 22 ? p.name.slice(0, 22) + '…' : p.name),
-      datasets: [{ label: 'Conclusão', data: projects.map(p => DB.projectCompletion(p.id)), backgroundColor: colors3 }],
+      datasets: [{ label: 'Completion', data: projects.map(p => DB.projectCompletion(p.id)), backgroundColor: colors3 }],
       xTickFormat: v => `${Math.round(v)}%`,
     });
 
@@ -1922,10 +1922,10 @@ const ReportsView = {
     });
 
     A10Charts.bar('chart-actions', {
-      labels: ['Baixa', 'Média', 'Alta', 'Crítica'],
+      labels: ['Low', 'Medium', 'High', 'Critical'],
       datasets: [
-        { label: 'Abertas', data: PRIORITIES.map(p => byPriority[p]?.open || 0), backgroundColor: [mid, accent, amber, red] },
-        { label: 'Feitas',  data: PRIORITIES.map(p => byPriority[p]?.done || 0), backgroundColor: green },
+        { label: 'Open', data: PRIORITIES.map(p => byPriority[p]?.open || 0), backgroundColor: [mid, accent, amber, red] },
+        { label: 'Done', data: PRIORITIES.map(p => byPriority[p]?.done || 0), backgroundColor: green },
       ],
       stacked: true,
     });
