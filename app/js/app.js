@@ -437,7 +437,12 @@ const UI = {
     document.getElementById('doc-title').textContent = title;
     document.getElementById('doc-body').innerHTML = bodyHtml;
     document.getElementById('doc-overlay').classList.remove('hidden');
-    document.getElementById('btn-print-doc').onclick = () => printContent(document.getElementById('doc-body').innerHTML);
+    document.getElementById('btn-print-doc').onclick = () => printContent(document.getElementById('doc-body').innerHTML, title);
+    document.getElementById('btn-export-doc').onclick = () => exportHTML(
+      document.getElementById('doc-body').innerHTML,
+      (title || 'document').replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.html',
+      title
+    );
   },
 
   closeDocPreview() {
@@ -611,15 +616,110 @@ function riskScoreBadge(prob, impact) {
   return `<span style="display:inline-block;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:700;background:#dcfce7;color:#16a34a">Low (${score})</span>`;
 }
 
-function printContent(html) {
-  const cssText = Array.from(document.styleSheets)
-    .map(s => { try { return Array.from(s.cssRules).map(r => r.cssText).join('\n'); } catch { return ''; } })
-    .join('\n');
-  const win = window.open('', '_blank', 'width=900,height=700');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${cssText}</style></head><body>${html}</body></html>`);
+const PRINT_STYLES = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap');
+  :root { --navy:#0f2a44; --accent:#3e6697; --mid:#6b7280; --line:#e5e7eb; --grey:#f8f9fb; }
+  *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-size:14px; color:var(--navy); background:#fff; padding:32px 40px; line-height:1.55; }
+  .doc-print { max-width:860px; margin:0 auto; }
+  .doc-print-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; padding-bottom:16px; border-bottom:2px solid var(--navy); }
+  .doc-print-logo { font-size:22px; font-weight:900; letter-spacing:-1px; color:var(--navy); }
+  .doc-print-logo span { font-weight:300; color:var(--mid); }
+  .doc-print-meta { text-align:right; font-size:12px; color:var(--mid); }
+  .doc-print-meta strong { display:block; font-size:14px; color:var(--navy); }
+  .doc-print h1 { font-size:26px; font-weight:900; letter-spacing:-1px; margin-bottom:6px; color:var(--navy); }
+  .doc-print h2 { font-size:16px; font-weight:900; color:var(--navy); margin:24px 0 8px; border-bottom:1px solid var(--line); padding-bottom:4px; }
+  .doc-print h3 { font-size:14px; font-weight:700; color:var(--navy); margin:16px 0 6px; }
+  .doc-print p  { font-size:14px; margin-bottom:10px; }
+  .doc-print ul { font-size:14px; padding-left:20px; margin-bottom:10px; }
+  .doc-print li { margin-bottom:4px; }
+  .doc-print-field { display:flex; gap:16px; margin-bottom:8px; font-size:13px; }
+  .doc-print-field-label { font-weight:700; min-width:110px; color:var(--mid); font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+  .doc-print-field-value { flex:1; }
+  .doc-print table { width:100%; border-collapse:collapse; font-size:13px; margin-bottom:16px; }
+  .doc-print th { background:var(--navy); color:#fff; font-weight:700; padding:8px 12px; text-align:left; font-size:12px; }
+  .doc-print td { padding:7px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .doc-print tr:nth-child(even) td { background:var(--grey); }
+  /* Invoice doc */
+  .inv-doc { font-family:'Inter',sans-serif; max-width:860px; margin:0 auto; padding:40px; }
+  .inv-doc-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:40px; padding-bottom:20px; border-bottom:3px solid var(--navy); }
+  .inv-doc-brand { font-size:24px; font-weight:900; letter-spacing:-1px; color:var(--navy); }
+  .inv-doc-brand span { font-weight:300; color:var(--mid); }
+  .inv-doc-type { font-size:28px; font-weight:900; color:var(--accent); text-transform:uppercase; letter-spacing:-1px; }
+  .inv-doc-meta { display:flex; gap:32px; margin-bottom:32px; }
+  .inv-doc-block { flex:1; }
+  .inv-doc-block-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--mid); margin-bottom:8px; }
+  .inv-doc-block p { font-size:13px; margin-bottom:4px; }
+  .inv-doc-block strong { font-weight:700; }
+  .inv-tbl { width:100%; border-collapse:collapse; margin-bottom:24px; }
+  .inv-tbl th { background:var(--navy); color:#fff; font-size:12px; font-weight:700; padding:10px 12px; text-align:left; }
+  .inv-tbl td { padding:9px 12px; border-bottom:1px solid var(--line); font-size:13px; vertical-align:top; }
+  .inv-tbl tr:nth-child(even) td { background:var(--grey); }
+  .inv-totals { margin-left:auto; width:280px; }
+  .inv-tot-row { display:flex; justify-content:space-between; padding:5px 0; font-size:13px; }
+  .inv-tot-total { font-size:16px; font-weight:900; color:var(--navy); border-top:2px solid var(--navy); padding-top:8px; margin-top:6px; }
+  .inv-doc-notes { background:var(--grey); border-radius:6px; padding:12px 16px; font-size:13px; margin-top:24px; }
+  .inv-doc-notes strong { display:block; font-weight:700; margin-bottom:4px; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--mid); }
+  /* Tab print styles */
+  .print-section { margin-bottom:28px; }
+  .print-section-title { font-size:16px; font-weight:900; color:var(--navy); border-bottom:2px solid var(--navy); padding-bottom:6px; margin-bottom:14px; }
+  .print-table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:16px; }
+  .print-table th { background:var(--navy); color:#fff; font-weight:700; padding:7px 10px; text-align:left; font-size:11px; }
+  .print-table td { padding:6px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .print-table tr:nth-child(even) td { background:var(--grey); }
+  .print-kv { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+  .print-kv-item { border:1px solid var(--line); border-radius:6px; padding:10px 14px; }
+  .print-kv-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--mid); margin-bottom:4px; }
+  .print-kv-value { font-size:16px; font-weight:900; color:var(--navy); }
+  .print-kv-sub { font-size:11px; color:var(--mid); margin-top:2px; }
+  .print-badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; }
+  .print-badge-active   { background:#dcfce7; color:#16a34a; }
+  .print-badge-on-hold  { background:#fef9c3; color:#a16207; }
+  .print-badge-complete { background:#f3f4f6; color:#374151; }
+  .print-progress { height:6px; background:var(--line); border-radius:3px; overflow:hidden; margin-top:4px; }
+  .print-progress-bar { height:100%; background:var(--accent); border-radius:3px; }
+  @media print {
+    body { padding:0; }
+    @page { margin:18mm 14mm; size:A4; }
+  }
+`;
+
+function buildPrintDoc(html, title) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${title || 'A10 Consulting'}</title>
+  <style>${PRINT_STYLES}</style>
+</head>
+<body>${html}</body>
+</html>`;
+}
+
+function printContent(html, title) {
+  const doc = buildPrintDoc(html, title);
+  const win = window.open('', '_blank', 'width=960,height=720');
+  win.document.write(doc);
   win.document.close();
   win.focus();
-  setTimeout(() => { win.print(); }, 600);
+  /* Wait for Inter to load before printing */
+  if (win.document.fonts && win.document.fonts.ready) {
+    win.document.fonts.ready.then(() => { setTimeout(() => win.print(), 150); });
+  } else {
+    setTimeout(() => win.print(), 900);
+  }
+}
+
+function exportHTML(html, filename, title) {
+  const doc = buildPrintDoc(html, title);
+  const blob = new Blob([doc], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
 /* ── Notifications ─────────────────────────────────────────── */
@@ -1044,8 +1144,14 @@ const ProjectView = {
     ];
 
     document.getElementById('main-content').innerHTML = `
-      <div class="tabs">
-        ${tabs.map(t => `<button class="tab-btn ${this.activeTab === t.id ? 'active' : ''}" data-tab="${t.id}">${t.label}</button>`).join('')}
+      <div class="tabs tabs-with-actions">
+        <div class="tabs-scroll">
+          ${tabs.map(t => `<button class="tab-btn ${this.activeTab === t.id ? 'active' : ''}" data-tab="${t.id}">${t.label}</button>`).join('')}
+        </div>
+        <div class="tab-actions no-print">
+          <button class="btn btn-ghost btn-sm" id="btn-tab-export">↓ HTML</button>
+          <button class="btn btn-ghost btn-sm" id="btn-tab-print">⎙ Print</button>
+        </div>
       </div>
       <div id="tab-content"></div>
     `;
@@ -1058,7 +1164,129 @@ const ProjectView = {
       });
     });
 
+    document.getElementById('btn-tab-print').addEventListener('click', () => {
+      const { html, title } = this._buildTabPrintHTML(projectId);
+      printContent(html, title);
+    });
+    document.getElementById('btn-tab-export').addEventListener('click', () => {
+      const { html, title } = this._buildTabPrintHTML(projectId);
+      const filename = title.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.html';
+      exportHTML(html, filename, title);
+    });
+
     this._renderTab(projectId);
+  },
+
+  _buildTabPrintHTML(projectId) {
+    const proj = DB.projectById(projectId);
+    const tab  = this.activeTab;
+    const tabLabels = { overview:'Overview', gantt:'Gantt', 'action-plan':'Action Plan', budget:'Budget', documents:'Documents', risks:'Risk Register' };
+    const title = `${proj.name} — ${tabLabels[tab] || tab}`;
+    const today = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+
+    const header = `
+      <div class="doc-print-header">
+        <div class="doc-print-logo">A10<span> Consulting</span></div>
+        <div class="doc-print-meta"><strong>${proj.name}</strong>${proj.client}<br>${tabLabels[tab] || tab} · ${today}</div>
+      </div>`;
+
+    let body = '';
+
+    if (tab === 'overview') {
+      const pct = DB.projectCompletion(proj.id);
+      const planned = DB.projectPlanned(proj.id);
+      const spent   = DB.projectSpent(proj.id);
+      const budgetPct = planned ? Math.round(spent / planned * 100) : 0;
+      const primary = projCurrency(proj);
+      body = `
+        <div class="print-kv">
+          <div class="print-kv-item"><div class="print-kv-label">Status</div><div class="print-kv-value">${proj.status}</div></div>
+          <div class="print-kv-item"><div class="print-kv-label">Lead</div><div class="print-kv-value">${proj.lead}</div></div>
+          <div class="print-kv-item"><div class="print-kv-label">Timeline</div><div class="print-kv-value" style="font-size:13px">${fmtDate(proj.startDate)} → ${fmtDate(proj.endDate)}</div></div>
+          <div class="print-kv-item"><div class="print-kv-label">Budget (${primary})</div><div class="print-kv-value">${fmtC(proj.budget||0, primary)}</div><div class="print-kv-sub">${fmtC(spent, primary)} used (${budgetPct}%)</div></div>
+          <div class="print-kv-item"><div class="print-kv-label">Completion</div><div class="print-kv-value">${pct}%</div><div class="print-progress"><div class="print-progress-bar" style="width:${pct}%"></div></div></div>
+          <div class="print-kv-item"><div class="print-kv-label">Open Actions</div><div class="print-kv-value">${DB.actionItems().filter(a=>a.projectId===proj.id&&a.status!=='done').length}</div></div>
+        </div>
+        ${proj.description ? `<div class="print-section"><div class="print-section-title">Description</div><p>${proj.description}</p></div>` : ''}
+        ${(() => {
+          const allUsers = DB.users();
+          const members = (proj.memberIds||[]).map(id => allUsers.find(u=>u.id===id)).filter(Boolean);
+          const lead = allUsers.find(u=>u.name===proj.lead);
+          const team = lead ? [{ ...lead, isLead:true }, ...members.filter(u=>u.id!==lead.id)] : members;
+          if (!team.length) return '';
+          const tasks = DB.tasks().filter(t=>t.projectId===proj.id);
+          return `<div class="print-section"><div class="print-section-title">Team</div>
+            <table class="print-table"><thead><tr><th>Name</th><th>Role</th><th>Tasks Assigned</th><th>Completed</th></tr></thead><tbody>
+              ${team.map(u=>{
+                const mt=tasks.filter(t=>t.assignee===u.name);
+                return `<tr><td><strong>${u.name}</strong>${u.isLead?' (Lead)':''}</td><td style="text-transform:capitalize">${u.role}</td><td>${mt.length}</td><td>${mt.filter(t=>t.status==='completed').length}</td></tr>`;
+              }).join('')}
+            </tbody></table></div>`;
+        })()}`;
+    }
+
+    else if (tab === 'gantt') {
+      const tasks = DB.tasks().filter(t => t.projectId === proj.id);
+      body = `<div class="print-section"><div class="print-section-title">Task List</div>
+        <table class="print-table"><thead><tr><th>Task</th><th>Phase</th><th>Assignee</th><th>Start</th><th>Due</th><th>Status</th><th>%</th></tr></thead><tbody>
+          ${tasks.map(t=>`<tr><td>${t.name}</td><td>${t.phase||'—'}</td><td>${t.assignee||'—'}</td><td>${fmtDate(t.startDate)}</td><td>${fmtDate(t.dueDate)}</td><td style="text-transform:capitalize">${t.status}</td><td>${t.percentDone||0}%</td></tr>`).join('')}
+        </tbody></table></div>`;
+    }
+
+    else if (tab === 'action-plan') {
+      const actions = DB.actionItems().filter(a => a.projectId === proj.id);
+      body = `<div class="print-section"><div class="print-section-title">Action Plan</div>
+        <table class="print-table"><thead><tr><th>Scope</th><th>Action</th><th>Owner</th><th>Priority</th><th>Status</th><th>Due</th><th>Impact</th></tr></thead><tbody>
+          ${actions.map(a=>`<tr><td>${a.scope||'—'}</td><td>${a.description}</td><td>${a.owner||'—'}</td><td style="text-transform:capitalize">${a.priority||'—'}</td><td style="text-transform:capitalize">${a.status}</td><td>${fmtDate(a.dueDate)||'—'}</td><td style="font-size:11px">${a.operationalImpact||'—'}</td></tr>`).join('')}
+        </tbody></table></div>`;
+    }
+
+    else if (tab === 'budget') {
+      const items  = DB.budgetItems().filter(b => b.projectId === proj.id);
+      const allPOs = DB.purchaseOrders().filter(po => po.projectId === proj.id);
+      const allInvs= DB.invoices().filter(inv => inv.projectId === proj.id);
+      const cur    = projCurrency(proj);
+      const totalPlanned   = items.reduce((s,b)=>s+(b.planned||0),0);
+      const totalCommitted = allPOs.reduce((s,po)=>s+(po.amount||0),0);
+      const totalPaid      = allInvs.filter(i=>i.status==='paid').reduce((s,i)=>s+(i.amount||0),0);
+      body = `
+        <div class="print-kv" style="grid-template-columns:repeat(4,1fr)">
+          <div class="print-kv-item"><div class="print-kv-label">Planned (${cur})</div><div class="print-kv-value">${fmtC(totalPlanned,cur)}</div></div>
+          <div class="print-kv-item"><div class="print-kv-label">Committed</div><div class="print-kv-value">${fmtC(totalCommitted,cur)}</div></div>
+          <div class="print-kv-item"><div class="print-kv-label">Paid</div><div class="print-kv-value" style="color:#16a34a">${fmtC(totalPaid,cur)}</div></div>
+          <div class="print-kv-item"><div class="print-kv-label">Available</div><div class="print-kv-value ${totalPlanned-totalCommitted<0?'style="color:#dc2626"':''}">${fmtC(totalPlanned-totalCommitted,cur)}</div></div>
+        </div>
+        <div class="print-section"><div class="print-section-title">Budget Lines</div>
+          <table class="print-table"><thead><tr><th>Category</th><th>WBS</th><th>Planned (${cur})</th><th>Committed</th><th>Invoiced</th><th>Paid</th><th>Available</th></tr></thead><tbody>
+            ${items.map(b=>{
+              const pos=allPOs.filter(po=>po.budgetItemId===b.id);
+              const invs=allInvs.filter(inv=>pos.some(po=>po.id===inv.poId));
+              const committed=pos.reduce((s,po)=>s+(po.amount||0),0);
+              const invoiced=invs.reduce((s,i)=>s+(i.amount||0),0);
+              const paid=invs.filter(i=>i.status==='paid').reduce((s,i)=>s+(i.amount||0),0);
+              return `<tr><td><strong>${b.category}</strong></td><td style="font-size:11px">${b.wbs||'—'}</td><td>${fmtC(b.planned||0,cur)}</td><td>${fmtC(committed,cur)}</td><td>${fmtC(invoiced,cur)}</td><td>${fmtC(paid,cur)}</td><td>${fmtC((b.planned||0)-committed,cur)}</td></tr>`;
+            }).join('')}
+            <tr style="font-weight:700;border-top:2px solid #000"><td colspan="2">Total</td><td>${fmtC(totalPlanned,cur)}</td><td>${fmtC(totalCommitted,cur)}</td><td>—</td><td>${fmtC(totalPaid,cur)}</td><td>${fmtC(totalPlanned-totalCommitted,cur)}</td></tr>
+          </tbody></table></div>`;
+    }
+
+    else if (tab === 'risks') {
+      const risks = DB.risks().filter(r => r.projectId === proj.id);
+      body = `<div class="print-section"><div class="print-section-title">Risk Register</div>
+        <table class="print-table"><thead><tr><th>Description</th><th>Category</th><th>Probability</th><th>Impact</th><th>Owner</th><th>Status</th><th>Mitigation</th></tr></thead><tbody>
+          ${risks.map(r=>`<tr><td>${r.description}</td><td>${r.category||'—'}</td><td style="text-transform:capitalize">${r.probability||'—'}</td><td style="text-transform:capitalize">${r.impact||'—'}</td><td>${r.owner||'—'}</td><td style="text-transform:capitalize">${r.status}</td><td style="font-size:11px">${r.mitigation||'—'}</td></tr>`).join('')}
+        </tbody></table></div>`;
+    }
+
+    else if (tab === 'documents') {
+      const docs = DB.documents().filter(d => d.projectId === proj.id);
+      body = `<div class="print-section"><div class="print-section-title">Documents</div>
+        <table class="print-table"><thead><tr><th>Title</th><th>Type</th><th>Version</th><th>Date</th><th>Author</th></tr></thead><tbody>
+          ${docs.length ? docs.map(d=>`<tr><td>${d.title}</td><td>${d.type||'—'}</td><td>${d.version||'—'}</td><td>${fmtDate(d.createdAt)||'—'}</td><td>${d.author||'—'}</td></tr>`).join('') : '<tr><td colspan="5" style="color:#6b7280">No documents.</td></tr>'}
+        </tbody></table></div>`;
+    }
+
+    return { html: `<div class="doc-print">${header}${body}</div>`, title };
   },
 
   _renderTab(projectId) {

@@ -1582,6 +1582,21 @@ p { margin: 0 0 .5em; }
 .user-proj-chip:hover { background:#dde8f7; border-color:var(--accent); }
 .user-proj-lead { background:#eef3fb; border-color:#b3c9e8; color:var(--accent); }
 
+/* ── Project tab bar with print/export actions ────────────── */
+.tabs-with-actions {
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:2px solid var(--border); margin-bottom:24px; gap:8px;
+}
+.tabs-with-actions .tab-btn {
+  border-bottom:none; margin-bottom:-2px;
+}
+.tabs-scroll {
+  display:flex; flex-wrap:wrap; gap:0; flex:1; overflow-x:auto;
+}
+.tab-actions {
+  display:flex; gap:6px; flex-shrink:0; padding-bottom:4px;
+}
+
 /* ── Currency toggle (budget tab) ─────────────────────────── */
 .currency-toggle {
   display:inline-flex; border:1.5px solid var(--border); border-radius:8px; overflow:hidden;
