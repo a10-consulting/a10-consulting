@@ -1581,3 +1581,15 @@ p { margin: 0 0 .5em; }
 }
 .user-proj-chip:hover { background:#dde8f7; border-color:var(--accent); }
 .user-proj-lead { background:#eef3fb; border-color:#b3c9e8; color:var(--accent); }
+
+/* ── Currency toggle (budget tab) ─────────────────────────── */
+.currency-toggle {
+  display:inline-flex; border:1.5px solid var(--border); border-radius:8px; overflow:hidden;
+}
+.cur-btn {
+  padding:5px 14px; font-size:12px; font-weight:700; border:none; background:#fff;
+  color:var(--mid); cursor:pointer; transition:background .15s, color .15s;
+  letter-spacing:.5px;
+}
+.cur-btn.active { background:var(--accent); color:#fff; }
+.cur-btn:hover:not(.active) { background:var(--grey); }

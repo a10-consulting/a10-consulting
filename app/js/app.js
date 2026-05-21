@@ -26,6 +26,11 @@ const TASK_STATUSES = ['todo', 'in-progress', 'completed', 'blocked'];
 
 const PROJECT_STATUSES = ['draft', 'active', 'on-hold', 'completed'];
 
+const CURRENCIES = ['USD', 'EUR', 'AUD', 'CAD', 'XAF'];
+const CURRENCY_NAMES = { USD: 'US Dollar', EUR: 'Euro', AUD: 'Australian Dollar', CAD: 'Canadian Dollar', XAF: 'CFA Franc' };
+const CURRENCY_SYMBOLS = { USD: '$', EUR: '€', AUD: 'A$', CAD: 'C$', XAF: 'XAF ' };
+const DEFAULT_RATES = { USD: 1, EUR: 1.0823, AUD: 0.6512, CAD: 0.7389, XAF: 0.001650 };
+
 const PRIORITIES = ['low', 'medium', 'high', 'critical'];
 
 const ACTION_STATUSES = ['open', 'in-progress', 'done'];
@@ -54,6 +59,8 @@ const SEED = {
       status: 'active',
       lead: 'Alexandre Costa',
       memberIds: [1, 2],
+      primaryCurrency: 'USD',
+      secondaryCurrency: 'EUR',
       startDate: '2026-01-15',
       endDate: '2026-06-30',
       budget: 250000,
@@ -68,6 +75,8 @@ const SEED = {
       status: 'active',
       lead: 'Sofia Martins',
       memberIds: [2, 3],
+      primaryCurrency: 'EUR',
+      secondaryCurrency: 'USD',
       startDate: '2025-11-01',
       endDate: '2026-04-30',
       budget: 180000,
@@ -82,6 +91,8 @@ const SEED = {
       status: 'on-hold',
       lead: 'Alexandre Costa',
       memberIds: [1, 3],
+      primaryCurrency: 'XAF',
+      secondaryCurrency: 'USD',
       startDate: '2026-02-01',
       endDate: '2026-12-31',
       budget: 420000,
@@ -96,6 +107,8 @@ const SEED = {
       status: 'completed',
       lead: 'Ricardo Ferreira',
       memberIds: [3],
+      primaryCurrency: 'AUD',
+      secondaryCurrency: 'USD',
       startDate: '2025-08-01',
       endDate: '2025-12-31',
       budget: 160000,
@@ -291,6 +304,11 @@ const DB = {
     };
   },
   saveA10Settings(obj) { this.set('a10Settings', obj); },
+
+  currencySettings() {
+    return this.get('currencySettings') || { rates: { ...DEFAULT_RATES }, ratesDate: '' };
+  },
+  saveCurrencySettings(obj) { this.set('currencySettings', obj); },
   nextInvoiceNumber(type) {
     const year = new Date().getFullYear();
     const prefix = type === 'credit-note' ? `A10-NC-${year}` : `A10-FT-${year}`;
@@ -457,6 +475,23 @@ function fmt(n) {
   if (n === undefined || n === null) return '—';
   return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
 }
+
+function convertCurrency(amount, from, to) {
+  if (!amount || from === to) return amount || 0;
+  const rates = DB.currencySettings().rates;
+  return (amount || 0) * (rates[from] || 1) / (rates[to] || 1);
+}
+
+function fmtC(amount, currency) {
+  const n = amount || 0;
+  const sym = CURRENCY_SYMBOLS[currency] || (currency + ' ');
+  if (currency === 'XAF') return sym + Math.round(n).toLocaleString('en');
+  return sym + new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(n));
+}
+
+function fmtUSD(n) { return fmtC(n, 'USD'); }
+
+function projCurrency(proj) { return proj?.primaryCurrency || 'EUR'; }
 
 function fmtDate(str) {
   if (!str) return '—';
@@ -751,6 +786,10 @@ const Router = {
       UI.setTitle('Users', 'A10 Projects');
       UI.setHeaderActions('');
       UsersView.render();
+    } else if (route === 'admin') {
+      UI.setTitle('Settings', 'Admin');
+      UI.setHeaderActions('');
+      AdminView.render();
     }
   },
 
@@ -843,7 +882,8 @@ const Dashboard = {
     const actionItems = DB.actionItems();
 
     const active    = projects.filter(p => p.status === 'active').length;
-    const totalBudget = projects.reduce((s, p) => s + (p.budget || 0), 0);
+    const totalBudgetUSD = projects.reduce((s, p) =>
+      s + convertCurrency(p.budget || 0, projCurrency(p), 'USD'), 0);
     const avgCompletion = projects.length
       ? Math.round(projects.reduce((s, p) => s + DB.projectCompletion(p.id), 0) / projects.length)
       : 0;
@@ -857,9 +897,9 @@ const Dashboard = {
           <div class="stat-sub">${active} active</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Total Budget</div>
-          <div class="stat-value">${fmt(totalBudget)}</div>
-          <div class="stat-sub">All projects</div>
+          <div class="stat-label">Total Budget (USD)</div>
+          <div class="stat-value">${fmtUSD(totalBudgetUSD)}</div>
+          <div class="stat-sub">All projects · converted to USD</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Avg. Progress</div>
@@ -950,7 +990,8 @@ const Dashboard = {
               <td style="font-size:13px;white-space:nowrap">${p.lead}</td>
               <td style="min-width:120px">${progressBar(pct)}</td>
               <td style="font-size:13px;white-space:nowrap">
-                ${fmt(spent)} / ${fmt(p.budget)}
+                ${fmtUSD(convertCurrency(spent, projCurrency(p), 'USD'))} / ${fmtUSD(convertCurrency(p.budget||0, projCurrency(p), 'USD'))}
+                <div style="font-size:10px;color:var(--mid)">${fmtC(spent, projCurrency(p))} ${projCurrency(p)}</div>
                 <div style="margin-top:4px">${progressBar(budgetPct)}</div>
               </td>
               <td style="font-size:12px;color:var(--mid);white-space:nowrap">${fmtDate(p.endDate)}</td>
@@ -1403,6 +1444,15 @@ const ProjectView = {
     const allPOs = DB.purchaseOrders().filter(po => po.projectId === proj.id);
     const allInvs = DB.invoices().filter(inv => inv.projectId === proj.id);
 
+    const primary   = proj.primaryCurrency   || 'EUR';
+    const secondary = proj.secondaryCurrency || null;
+    let showCurrency = primary; // toggle state
+
+    function conv(amount) {
+      return showCurrency === primary ? (amount || 0) : convertCurrency(amount || 0, primary, showCurrency);
+    }
+    function f(amount) { return fmtC(conv(amount), showCurrency); }
+
     function itemStats(b) {
       const pos = allPOs.filter(po => po.budgetItemId === b.id);
       const invs = allInvs.filter(inv => pos.some(po => po.id === inv.poId));
@@ -1432,29 +1482,42 @@ const ProjectView = {
     const expandedPOs   = new Set();
     const refresh       = () => this._renderTab(proj.id);
 
+    const cs = DB.currencySettings();
+    const ratesInfo = cs.ratesDate ? `Rates: ${cs.ratesDate}` : 'Rates not yet updated';
+
     const renderAll = () => {
       tc.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px">
+            ${secondary ? `
+            <div class="currency-toggle">
+              <button class="cur-btn${showCurrency === primary ? ' active' : ''}" data-cur="${primary}">${primary}</button>
+              <button class="cur-btn${showCurrency === secondary ? ' active' : ''}" data-cur="${secondary}">${secondary}</button>
+            </div>` : `<span class="badge" style="font-size:12px">${primary}</span>`}
+          </div>
+          <span style="font-size:11px;color:var(--mid)">${ratesInfo}</span>
+        </div>
         <div class="budget-summary" style="grid-template-columns:repeat(5,1fr);margin-bottom:24px">
           <div class="budget-stat">
             <div class="budget-stat-label">Planned</div>
-            <div class="budget-stat-value">${fmt(totalPlanned)}</div>
+            <div class="budget-stat-value">${f(totalPlanned)}</div>
           </div>
           <div class="budget-stat">
             <div class="budget-stat-label">Committed (POs)</div>
-            <div class="budget-stat-value">${fmt(totalCommitted)}</div>
+            <div class="budget-stat-value">${f(totalCommitted)}</div>
             <div style="margin-top:6px">${progressBar(commitPct)}</div>
           </div>
           <div class="budget-stat">
             <div class="budget-stat-label">Invoiced</div>
-            <div class="budget-stat-value">${fmt(totalInvoiced)}</div>
+            <div class="budget-stat-value">${f(totalInvoiced)}</div>
           </div>
           <div class="budget-stat">
             <div class="budget-stat-label">Paid</div>
-            <div class="budget-stat-value" style="color:#16a34a">${fmt(totalPaid)}</div>
+            <div class="budget-stat-value" style="color:#16a34a">${f(totalPaid)}</div>
           </div>
           <div class="budget-stat">
             <div class="budget-stat-label">Available</div>
-            <div class="budget-stat-value ${totalAvailable < 0 ? 'negative' : ''}">${fmt(totalAvailable)}</div>
+            <div class="budget-stat-value ${totalAvailable < 0 ? 'negative' : ''}">${f(totalAvailable)}</div>
           </div>
         </div>
         <div class="section-card">
@@ -1485,6 +1548,10 @@ const ProjectView = {
       `;
 
       document.getElementById('btn-add-budget')?.addEventListener('click', () => BudgetModal.open(proj.id, null, refresh));
+      tc.querySelectorAll('.cur-btn').forEach(btn => btn.addEventListener('click', () => {
+        showCurrency = btn.dataset.cur;
+        renderAll();
+      }));
       if (items.length) renderRows();
     };
 
@@ -1504,11 +1571,11 @@ const ProjectView = {
             <strong>${b.category}</strong>
           </div></td>
           <td style="font-size:12px;color:var(--mid)">${b.wbs || '—'}</td>
-          <td style="font-weight:700">${fmt(b.planned)}</td>
-          <td>${fmt(s.committed)}</td>
-          <td>${fmt(s.invoiced)}</td>
-          <td style="color:#16a34a;font-weight:${s.paid > 0 ? '700' : '400'}">${fmt(s.paid)}</td>
-          <td style="font-weight:700;color:${avColor}">${fmt(s.available)}</td>
+          <td style="font-weight:700">${f(b.planned)}</td>
+          <td>${f(s.committed)}</td>
+          <td>${f(s.invoiced)}</td>
+          <td style="color:#16a34a;font-weight:${s.paid > 0 ? '700' : '400'}">${f(s.paid)}</td>
+          <td style="font-weight:700;color:${avColor}">${f(s.available)}</td>
           <td><div class="actions-cell">
             <button class="btn btn-secondary btn-sm" data-edit-budget="${b.id}">Edit</button>
             <button class="btn btn-danger btn-sm" data-delete-budget="${b.id}">✕</button>
@@ -1526,10 +1593,10 @@ const ProjectView = {
               </div></td>
               <td style="font-size:12px"><div style="font-weight:600">${po.description}</div><div style="color:var(--mid)">${po.vendor}</div></td>
               <td>${poStatusBadge(po.status)}</td>
-              <td style="font-weight:700">${fmt(po.amount)}</td>
-              <td>${fmt(ps.invoiced)}</td>
-              <td style="color:#16a34a;font-weight:${ps.paid > 0 ? '700' : '400'}">${fmt(ps.paid)}</td>
-              <td style="font-size:12px;color:var(--mid)">${fmt(po.amount - ps.paid)} remaining</td>
+              <td style="font-weight:700">${f(po.amount)}</td>
+              <td>${f(ps.invoiced)}</td>
+              <td style="color:#16a34a;font-weight:${ps.paid > 0 ? '700' : '400'}">${f(ps.paid)}</td>
+              <td style="font-size:12px;color:var(--mid)">${f(po.amount - ps.paid)} remaining</td>
               <td><div class="actions-cell">
                 <button class="btn btn-primary btn-sm" style="font-size:11px;padding:2px 7px" data-add-invoice="${po.id}">+ Invoice</button>
                 <button class="btn btn-secondary btn-sm" data-edit-po="${po.id}">Edit</button>
@@ -1544,7 +1611,7 @@ const ProjectView = {
                     <td style="padding-left:52px;font-size:12px">📄 ${inv.invoiceNumber}</td>
                     <td style="font-size:12px">${inv.description}</td>
                     <td>${invoiceStatusBadge(inv.status)}</td>
-                    <td style="font-weight:700">${fmt(inv.amount)}</td>
+                    <td style="font-weight:700">${f(inv.amount)}</td>
                     <td style="font-size:12px;color:var(--mid)">${fmtDate(inv.invoiceDate)}</td>
                     <td style="font-size:12px;color:var(--mid)">Due: ${fmtDate(inv.dueDate)}</td>
                     <td style="font-size:12px;color:#16a34a">${inv.status === 'paid' ? '✓ ' + fmtDate(inv.paidDate) : '—'}</td>
@@ -1568,12 +1635,12 @@ const ProjectView = {
 
       // Totals
       html += `<tr style="background:var(--grey);font-weight:700;border-top:2px solid var(--border)">
-        <td colspan="2">Total</td>
-        <td>${fmt(totalPlanned)}</td>
-        <td>${fmt(totalCommitted)}</td>
-        <td>${fmt(totalInvoiced)}</td>
-        <td style="color:#16a34a">${fmt(totalPaid)}</td>
-        <td style="${totalAvailable < 0 ? 'color:#dc2626' : 'color:#16a34a'}">${fmt(totalAvailable)}</td>
+        <td colspan="2">Total (${showCurrency})</td>
+        <td>${f(totalPlanned)}</td>
+        <td>${f(totalCommitted)}</td>
+        <td>${f(totalInvoiced)}</td>
+        <td style="color:#16a34a">${f(totalPaid)}</td>
+        <td style="${totalAvailable < 0 ? 'color:#dc2626' : 'color:#16a34a'}">${f(totalAvailable)}</td>
         <td></td>
       </tr>`;
 
@@ -1871,6 +1938,21 @@ const ProjectModal = {
           <div class="form-field">
             <label>Budget (€)</label>
             <input name="budget" type="number" min="0" value="${proj?.budget || ''}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Primary Currency</label>
+            <select name="primaryCurrency">
+              ${CURRENCIES.map(c => `<option value="${c}" ${(proj?.primaryCurrency||'EUR') === c ? 'selected' : ''}>${c} — ${CURRENCY_NAMES[c]}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Secondary Currency</label>
+            <select name="secondaryCurrency">
+              <option value="">— none —</option>
+              ${CURRENCIES.map(c => `<option value="${c}" ${proj?.secondaryCurrency === c ? 'selected' : ''}>${c} — ${CURRENCY_NAMES[c]}</option>`).join('')}
+            </select>
           </div>
         </div>
         <div class="form-field">
@@ -3455,8 +3537,10 @@ const ReportsView = {
     const tasks    = DB.tasks();
     const actions  = DB.actionItems();
 
-    const totalBudgetPlanned = projects.reduce((s, p) => s + DB.projectPlanned(p.id), 0);
-    const totalBudgetSpent   = projects.reduce((s, p) => s + DB.projectSpent(p.id), 0);
+    const totalBudgetPlanned = projects.reduce((s, p) =>
+      s + convertCurrency(DB.projectPlanned(p.id), projCurrency(p), 'USD'), 0);
+    const totalBudgetSpent = projects.reduce((s, p) =>
+      s + convertCurrency(DB.projectSpent(p.id), projCurrency(p), 'USD'), 0);
     const totalTasks         = tasks.length;
     const completedTasks     = tasks.filter(t => t.status === 'completed').length;
     const openActions        = actions.filter(a => a.status !== 'done').length;
@@ -3465,9 +3549,9 @@ const ReportsView = {
     document.getElementById('main-content').innerHTML = `
       <div class="stat-grid" style="margin-bottom:24px">
         <div class="stat-card">
-          <div class="stat-label">Total Budget</div>
-          <div class="stat-value">${fmt(totalBudgetPlanned)}</div>
-          <div class="stat-sub">${fmt(totalBudgetSpent)} used (${totalBudgetPlanned ? Math.round(totalBudgetSpent/totalBudgetPlanned*100) : 0}%)</div>
+          <div class="stat-label">Total Budget (USD)</div>
+          <div class="stat-value">${fmtUSD(totalBudgetPlanned)}</div>
+          <div class="stat-sub">${fmtUSD(totalBudgetSpent)} used (${totalBudgetPlanned ? Math.round(totalBudgetSpent/totalBudgetPlanned*100) : 0}%)</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Tasks Completed</div>
@@ -3529,14 +3613,14 @@ const ReportsView = {
       colors: [green, amber, mid, accent],
     });
 
-    /* Chart 2: Budget bar */
+    /* Chart 2: Budget bar (USD) */
     A10Charts.bar('chart-budget', {
       labels: projects.map(p => p.name.length > 20 ? p.name.slice(0, 20) + '…' : p.name),
       datasets: [
-        { label: 'Planned', data: projects.map(p => DB.projectPlanned(p.id)), backgroundColor: light },
-        { label: 'Actual',  data: projects.map(p => DB.projectSpent(p.id)),   backgroundColor: accent },
+        { label: 'Planned (USD)', data: projects.map(p => Math.round(convertCurrency(DB.projectPlanned(p.id), projCurrency(p), 'USD'))), backgroundColor: light },
+        { label: 'Actual (USD)',  data: projects.map(p => Math.round(convertCurrency(DB.projectSpent(p.id),   projCurrency(p), 'USD'))), backgroundColor: accent },
       ],
-      yTickFormat: v => `€${(v / 1000).toFixed(0)}k`,
+      yTickFormat: v => `$${(v / 1000).toFixed(0)}k`,
     });
 
     /* Chart 3: Horizontal progress bar */
@@ -3629,6 +3713,79 @@ document.addEventListener('click', e => {
   if (!e.target.closest('#notif-wrap')) Notifications.close();
 });
 
+/* ── Admin View ────────────────────────────────────────────── */
+
+const AdminView = {
+  render() {
+    const cs = DB.currencySettings();
+    const rates = { ...DEFAULT_RATES, ...cs.rates };
+
+    document.getElementById('main-content').innerHTML = `
+      <div class="section-card" style="max-width:680px">
+        <div class="section-card-header"><h3>Exchange Rates</h3></div>
+        <div class="section-card-body">
+          <p style="font-size:13px;color:var(--mid);margin-bottom:16px">
+            Rates are stored as value in USD for 1 unit of each currency.
+            Update daily with previous close rates.<br>
+            ${cs.ratesDate ? `<strong>Last updated:</strong> ${cs.ratesDate}` : '<span style="color:#d97706">⚠ Rates not yet updated — using default estimates.</span>'}
+          </p>
+          <form id="form-rates">
+            <table class="data-table" style="margin-bottom:16px">
+              <thead><tr><th>Currency</th><th>Name</th><th>Rate (1 unit = ? USD)</th><th>Implied Rate</th></tr></thead>
+              <tbody>
+                ${CURRENCIES.map(c => `
+                  <tr>
+                    <td><strong>${c}</strong></td>
+                    <td style="font-size:13px;color:var(--mid)">${CURRENCY_NAMES[c]}</td>
+                    <td>
+                      ${c === 'USD'
+                        ? `<input class="search-box" value="1.000000" disabled style="width:130px;color:var(--mid)">`
+                        : `<input class="search-box" name="rate_${c}" type="number" step="0.000001" min="0.000001" value="${(rates[c] || DEFAULT_RATES[c]).toFixed(6)}" style="width:130px" required>`}
+                    </td>
+                    <td style="font-size:12px;color:var(--mid)" id="implied-${c}">
+                      ${c !== 'USD' ? `1 USD = ${(1 / (rates[c] || DEFAULT_RATES[c])).toFixed(4)} ${c}` : '—'}
+                    </td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+            <div class="form-row" style="align-items:flex-end">
+              <div class="form-field">
+                <label>Rates Date (previous close)</label>
+                <input name="ratesDate" type="date" value="${cs.ratesDate || ''}" required>
+              </div>
+              <div>
+                <button type="submit" class="btn btn-primary">Save Rates</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('form-rates').addEventListener('submit', e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const newRates = { USD: 1 };
+      CURRENCIES.filter(c => c !== 'USD').forEach(c => {
+        newRates[c] = parseFloat(fd.get('rate_' + c)) || DEFAULT_RATES[c];
+      });
+      DB.saveCurrencySettings({ rates: newRates, ratesDate: fd.get('ratesDate') });
+      UI.toast('Exchange rates saved.', 'success');
+      AdminView.render();
+    });
+
+    // Live implied rate preview
+    CURRENCIES.filter(c => c !== 'USD').forEach(c => {
+      const inp = document.querySelector(`[name="rate_${c}"]`);
+      if (inp) inp.addEventListener('input', () => {
+        const v = parseFloat(inp.value);
+        const el = document.getElementById('implied-' + c);
+        if (el && v > 0) el.textContent = `1 USD = ${(1 / v).toFixed(4)} ${c}`;
+      });
+    });
+  },
+};
+
 /* ── Init ──────────────────────────────────────────────────── */
 
 (function init() {
@@ -3644,6 +3801,18 @@ document.addEventListener('click', e => {
     const projs = DB.projects().map(p => p.memberIds ? p : { ...p, memberIds: memberMap[p.id] || [] });
     DB.saveProjects(projs);
     DB.set('seeded_v3', true);
+  }
+  /* One-time migration: add currency fields to seed projects */
+  if (!DB.get('seeded_v4')) {
+    const currMap = {
+      'proj-1': { primaryCurrency: 'USD', secondaryCurrency: 'EUR' },
+      'proj-2': { primaryCurrency: 'EUR', secondaryCurrency: 'USD' },
+      'proj-3': { primaryCurrency: 'XAF', secondaryCurrency: 'USD' },
+      'proj-4': { primaryCurrency: 'AUD', secondaryCurrency: 'USD' },
+    };
+    const projs = DB.projects().map(p => p.primaryCurrency ? p : { ...p, ...(currMap[p.id] || { primaryCurrency: 'EUR' }) });
+    DB.saveProjects(projs);
+    DB.set('seeded_v4', true);
   }
   const session = Auth.current();
   if (session) {
