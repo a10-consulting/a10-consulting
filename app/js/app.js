@@ -1163,83 +1163,234 @@ const ProjectView = {
   /* ── Tab: Budget ── */
   _renderBudget(proj, tc) {
     const items = DB.budgetItems().filter(b => b.projectId === proj.id);
-    const totalPlanned = items.reduce((s, b) => s + b.planned, 0);
-    const totalActual  = items.reduce((s, b) => s + b.actual, 0);
-    const variance     = totalPlanned - totalActual;
-    const utilPct      = totalPlanned ? Math.round(totalActual / totalPlanned * 100) : 0;
+    const allPOs = DB.purchaseOrders().filter(po => po.projectId === proj.id);
+    const allInvs = DB.invoices().filter(inv => inv.projectId === proj.id);
 
-    tc.innerHTML = `
-      <div class="budget-summary">
-        <div class="budget-stat">
-          <div class="budget-stat-label">Planned Budget</div>
-          <div class="budget-stat-value">${fmt(totalPlanned)}</div>
-        </div>
-        <div class="budget-stat">
-          <div class="budget-stat-label">Actual Spend</div>
-          <div class="budget-stat-value">${fmt(totalActual)}</div>
-        </div>
-        <div class="budget-stat">
-          <div class="budget-stat-label">Variance</div>
-          <div class="budget-stat-value ${variance < 0 ? 'negative' : ''}">${variance >= 0 ? '+' : ''}${fmt(variance)}</div>
-        </div>
-        <div class="budget-stat">
-          <div class="budget-stat-label">Utilisation</div>
-          <div class="budget-stat-value">${utilPct}%</div>
-          <div style="margin-top:6px">${progressBar(utilPct)}</div>
-        </div>
-      </div>
+    function itemStats(b) {
+      const pos = allPOs.filter(po => po.budgetItemId === b.id);
+      const invs = allInvs.filter(inv => pos.some(po => po.id === inv.poId));
+      const committed = pos.reduce((s, po) => s + (po.amount || 0), 0);
+      const invoiced  = invs.reduce((s, inv) => s + (inv.amount || 0), 0);
+      const paid      = invs.filter(i => i.status === 'paid').reduce((s, i) => s + (i.amount || 0), 0);
+      return { committed, invoiced, paid, available: b.planned - committed, pos };
+    }
 
-      <div class="section-card">
-        <div class="section-card-header">
-          <h3>Breakdown by Category</h3>
-          <button class="btn btn-primary btn-sm" id="btn-add-budget">+ Category</button>
-        </div>
-        ${items.length ? `
-          <table class="data-table">
-            <thead>
-              <tr><th>Category</th><th>Planned</th><th>Actual</th><th>Variance</th><th>Utilisation</th><th>Notes</th><th></th></tr>
-            </thead>
-            <tbody>
-              ${items.map(b => {
-                const v = b.planned - b.actual;
-                const u = b.planned ? Math.round(b.actual / b.planned * 100) : 0;
-                return `<tr>
-                  <td style="font-weight:700">${b.category}</td>
-                  <td style="font-size:13px">${fmt(b.planned)}</td>
-                  <td style="font-size:13px">${fmt(b.actual)}</td>
-                  <td style="font-size:13px;${v < 0 ? 'color:#dc2626;font-weight:700' : 'color:#16a34a'}">${v >= 0 ? '+' : ''}${fmt(v)}</td>
-                  <td style="min-width:120px">${progressBar(u)}</td>
-                  <td style="font-size:12px;color:var(--mid)">${b.notes || '—'}</td>
-                  <td>
-                    <div class="actions-cell">
-                      <button class="btn btn-secondary btn-sm" data-edit-budget="${b.id}">Edit</button>
-                      <button class="btn btn-danger btn-sm" data-delete-budget="${b.id}">✕</button>
-                    </div>
-                  </td>
-                </tr>`;
-              }).join('')}
-              <tr style="background:var(--grey);font-weight:700">
-                <td>Total</td>
-                <td>${fmt(totalPlanned)}</td>
-                <td>${fmt(totalActual)}</td>
-                <td style="${variance < 0 ? 'color:#dc2626' : 'color:#16a34a'}">${variance >= 0 ? '+' : ''}${fmt(variance)}</td>
-                <td>${progressBar(utilPct)}</td>
-                <td></td><td></td>
-              </tr>
-            </tbody>
-          </table>
-        ` : `<div class="empty-state"><div class="empty-state-icon">💰</div><p>No budget items. Add categories to track spending.</p></div>`}
-      </div>
-    `;
+    function poStats(po) {
+      const invs = allInvs.filter(inv => inv.poId === po.id);
+      return {
+        invoiced: invs.reduce((s, i) => s + (i.amount || 0), 0),
+        paid: invs.filter(i => i.status === 'paid').reduce((s, i) => s + (i.amount || 0), 0),
+        invs,
+      };
+    }
 
-    document.getElementById('btn-add-budget')?.addEventListener('click', () => BudgetModal.open(proj.id, null, () => this._renderTab(proj.id)));
-    tc.querySelectorAll('[data-edit-budget]').forEach(btn => btn.addEventListener('click', () => BudgetModal.open(proj.id, btn.dataset.editBudget, () => this._renderTab(proj.id))));
-    tc.querySelectorAll('[data-delete-budget]').forEach(btn => btn.addEventListener('click', () => {
-      if (!UI.confirm('Delete this category?')) return;
-      DB.saveBudgetItems(DB.budgetItems().filter(b => b.id !== btn.dataset.deleteBudget));
-      UI.toast('Category deleted.', 'default');
-      this._renderTab(proj.id);
-    }));
+    const totalPlanned   = items.reduce((s, b) => s + (b.planned || 0), 0);
+    const totalCommitted = allPOs.reduce((s, po) => s + (po.amount || 0), 0);
+    const totalInvoiced  = allInvs.reduce((s, i) => s + (i.amount || 0), 0);
+    const totalPaid      = allInvs.filter(i => i.status === 'paid').reduce((s, i) => s + (i.amount || 0), 0);
+    const totalAvailable = totalPlanned - totalCommitted;
+    const commitPct      = totalPlanned ? Math.round(totalCommitted / totalPlanned * 100) : 0;
+
+    const expandedItems = new Set();
+    const expandedPOs   = new Set();
+    const refresh       = () => this._renderTab(proj.id);
+
+    const renderAll = () => {
+      tc.innerHTML = `
+        <div class="budget-summary" style="grid-template-columns:repeat(5,1fr);margin-bottom:24px">
+          <div class="budget-stat">
+            <div class="budget-stat-label">Planned</div>
+            <div class="budget-stat-value">${fmt(totalPlanned)}</div>
+          </div>
+          <div class="budget-stat">
+            <div class="budget-stat-label">Committed (POs)</div>
+            <div class="budget-stat-value">${fmt(totalCommitted)}</div>
+            <div style="margin-top:6px">${progressBar(commitPct)}</div>
+          </div>
+          <div class="budget-stat">
+            <div class="budget-stat-label">Invoiced</div>
+            <div class="budget-stat-value">${fmt(totalInvoiced)}</div>
+          </div>
+          <div class="budget-stat">
+            <div class="budget-stat-label">Paid</div>
+            <div class="budget-stat-value" style="color:#16a34a">${fmt(totalPaid)}</div>
+          </div>
+          <div class="budget-stat">
+            <div class="budget-stat-label">Available</div>
+            <div class="budget-stat-value ${totalAvailable < 0 ? 'negative' : ''}">${fmt(totalAvailable)}</div>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="section-card-header">
+            <h3>Budget Lines</h3>
+            <button class="btn btn-primary btn-sm" id="btn-add-budget">+ Budget Line</button>
+          </div>
+          ${items.length ? `
+            <div style="overflow-x:auto">
+              <table class="data-table" id="budget-table">
+                <thead>
+                  <tr>
+                    <th style="min-width:160px">Category</th>
+                    <th style="min-width:160px">WBS / Cost Centre</th>
+                    <th style="min-width:110px">Planned</th>
+                    <th style="min-width:110px">Committed</th>
+                    <th style="min-width:110px">Invoiced</th>
+                    <th style="min-width:110px">Paid</th>
+                    <th style="min-width:110px">Available</th>
+                    <th style="min-width:120px"></th>
+                  </tr>
+                </thead>
+                <tbody id="budget-tbody"></tbody>
+              </table>
+            </div>
+          ` : `<div class="empty-state"><div class="empty-state-icon">💰</div><p>No budget lines. Add a budget line to get started.</p></div>`}
+        </div>
+      `;
+
+      document.getElementById('btn-add-budget')?.addEventListener('click', () => BudgetModal.open(proj.id, null, refresh));
+      if (items.length) renderRows();
+    };
+
+    const renderRows = () => {
+      const tbody = document.getElementById('budget-tbody');
+      if (!tbody) return;
+      let html = '';
+
+      items.forEach(b => {
+        const s = itemStats(b);
+        const isExp = expandedItems.has(b.id);
+        const avColor = s.available < 0 ? '#dc2626' : '#16a34a';
+
+        html += `<tr class="budget-cat-row">
+          <td><div style="display:flex;align-items:center;gap:6px">
+            <button class="expand-btn" data-expand-item="${b.id}">${isExp ? '▼' : '▶'}</button>
+            <strong>${b.category}</strong>
+          </div></td>
+          <td style="font-size:12px;color:var(--mid)">${b.wbs || '—'}</td>
+          <td style="font-weight:700">${fmt(b.planned)}</td>
+          <td>${fmt(s.committed)}</td>
+          <td>${fmt(s.invoiced)}</td>
+          <td style="color:#16a34a;font-weight:${s.paid > 0 ? '700' : '400'}">${fmt(s.paid)}</td>
+          <td style="font-weight:700;color:${avColor}">${fmt(s.available)}</td>
+          <td><div class="actions-cell">
+            <button class="btn btn-secondary btn-sm" data-edit-budget="${b.id}">Edit</button>
+            <button class="btn btn-danger btn-sm" data-delete-budget="${b.id}">✕</button>
+          </div></td>
+        </tr>`;
+
+        if (isExp) {
+          s.pos.forEach(po => {
+            const ps = poStats(po);
+            const isPOExp = expandedPOs.has(po.id);
+            html += `<tr style="background:#f5f8ff">
+              <td style="padding-left:28px"><div style="display:flex;align-items:center;gap:6px">
+                <button class="expand-btn" data-expand-po="${po.id}">${isPOExp ? '▼' : '▶'}</button>
+                <span style="font-size:12px;font-weight:700;color:var(--accent)">${po.poNumber}</span>
+              </div></td>
+              <td style="font-size:12px"><div style="font-weight:600">${po.description}</div><div style="color:var(--mid)">${po.vendor}</div></td>
+              <td>${poStatusBadge(po.status)}</td>
+              <td style="font-weight:700">${fmt(po.amount)}</td>
+              <td>${fmt(ps.invoiced)}</td>
+              <td style="color:#16a34a;font-weight:${ps.paid > 0 ? '700' : '400'}">${fmt(ps.paid)}</td>
+              <td style="font-size:12px;color:var(--mid)">${fmt(po.amount - ps.paid)} remaining</td>
+              <td><div class="actions-cell">
+                <button class="btn btn-primary btn-sm" style="font-size:11px;padding:2px 7px" data-add-invoice="${po.id}">+ Invoice</button>
+                <button class="btn btn-secondary btn-sm" data-edit-po="${po.id}">Edit</button>
+                <button class="btn btn-danger btn-sm" data-delete-po="${po.id}">✕</button>
+              </div></td>
+            </tr>`;
+
+            if (isPOExp) {
+              if (ps.invs.length) {
+                ps.invs.forEach(inv => {
+                  html += `<tr style="background:#eef2ff">
+                    <td style="padding-left:52px;font-size:12px">📄 ${inv.invoiceNumber}</td>
+                    <td style="font-size:12px">${inv.description}</td>
+                    <td>${invoiceStatusBadge(inv.status)}</td>
+                    <td style="font-weight:700">${fmt(inv.amount)}</td>
+                    <td style="font-size:12px;color:var(--mid)">${fmtDate(inv.invoiceDate)}</td>
+                    <td style="font-size:12px;color:var(--mid)">Due: ${fmtDate(inv.dueDate)}</td>
+                    <td style="font-size:12px;color:#16a34a">${inv.status === 'paid' ? '✓ ' + fmtDate(inv.paidDate) : '—'}</td>
+                    <td><div class="actions-cell">
+                      <button class="btn btn-secondary btn-sm" data-edit-invoice="${inv.id}">Edit</button>
+                      <button class="btn btn-danger btn-sm" data-delete-invoice="${inv.id}">✕</button>
+                    </div></td>
+                  </tr>`;
+                });
+              } else {
+                html += `<tr style="background:#eef2ff"><td colspan="8" style="padding-left:52px;font-size:12px;color:var(--mid)">No invoices for this PO yet.</td></tr>`;
+              }
+            }
+          });
+
+          html += `<tr style="background:#f5f8ff"><td colspan="8" style="padding-left:28px;padding-top:6px;padding-bottom:8px">
+            <button class="btn btn-secondary btn-sm" data-add-po="${b.id}">+ Purchase Order</button>
+          </td></tr>`;
+        }
+      });
+
+      // Totals
+      html += `<tr style="background:var(--grey);font-weight:700;border-top:2px solid var(--border)">
+        <td colspan="2">Total</td>
+        <td>${fmt(totalPlanned)}</td>
+        <td>${fmt(totalCommitted)}</td>
+        <td>${fmt(totalInvoiced)}</td>
+        <td style="color:#16a34a">${fmt(totalPaid)}</td>
+        <td style="${totalAvailable < 0 ? 'color:#dc2626' : 'color:#16a34a'}">${fmt(totalAvailable)}</td>
+        <td></td>
+      </tr>`;
+
+      tbody.innerHTML = html;
+
+      tbody.querySelectorAll('[data-expand-item]').forEach(btn => btn.addEventListener('click', () => {
+        const id = btn.dataset.expandItem;
+        if (expandedItems.has(id)) expandedItems.delete(id); else expandedItems.add(id);
+        renderRows();
+      }));
+      tbody.querySelectorAll('[data-expand-po]').forEach(btn => btn.addEventListener('click', () => {
+        const id = btn.dataset.expandPo;
+        if (expandedPOs.has(id)) expandedPOs.delete(id); else expandedPOs.add(id);
+        renderRows();
+      }));
+      tbody.querySelectorAll('[data-edit-budget]').forEach(btn => btn.addEventListener('click', () => BudgetModal.open(proj.id, btn.dataset.editBudget, refresh)));
+      tbody.querySelectorAll('[data-delete-budget]').forEach(btn => btn.addEventListener('click', () => {
+        if (!UI.confirm('Delete this budget line and all its POs and invoices?')) return;
+        const bId = btn.dataset.deleteBudget;
+        const bPOs = DB.purchaseOrders().filter(po => po.budgetItemId === bId);
+        const poIds = bPOs.map(po => po.id);
+        DB.saveBudgetItems(DB.budgetItems().filter(b => b.id !== bId));
+        DB.savePurchaseOrders(DB.purchaseOrders().filter(po => po.budgetItemId !== bId));
+        DB.saveInvoices(DB.invoices().filter(inv => !poIds.includes(inv.poId)));
+        UI.toast('Budget line deleted.', 'default');
+        refresh();
+      }));
+      tbody.querySelectorAll('[data-add-po]').forEach(btn => btn.addEventListener('click', () => {
+        const bId = btn.dataset.addPo;
+        POModal.open(proj.id, bId, null, () => { expandedItems.add(bId); refresh(); });
+      }));
+      tbody.querySelectorAll('[data-edit-po]').forEach(btn => btn.addEventListener('click', () => POModal.open(proj.id, null, btn.dataset.editPo, refresh)));
+      tbody.querySelectorAll('[data-delete-po]').forEach(btn => btn.addEventListener('click', () => {
+        if (!UI.confirm('Delete this PO and all its invoices?')) return;
+        const poId = btn.dataset.deletePo;
+        DB.savePurchaseOrders(DB.purchaseOrders().filter(po => po.id !== poId));
+        DB.saveInvoices(DB.invoices().filter(inv => inv.poId !== poId));
+        UI.toast('PO deleted.', 'default');
+        refresh();
+      }));
+      tbody.querySelectorAll('[data-add-invoice]').forEach(btn => btn.addEventListener('click', () => {
+        const poId = btn.dataset.addInvoice;
+        InvoiceModal.open(proj.id, poId, null, () => { expandedPOs.add(poId); refresh(); });
+      }));
+      tbody.querySelectorAll('[data-edit-invoice]').forEach(btn => btn.addEventListener('click', () => InvoiceModal.open(proj.id, null, btn.dataset.editInvoice, refresh)));
+      tbody.querySelectorAll('[data-delete-invoice]').forEach(btn => btn.addEventListener('click', () => {
+        if (!UI.confirm('Delete this invoice?')) return;
+        DB.saveInvoices(DB.invoices().filter(inv => inv.id !== btn.dataset.deleteInvoice));
+        UI.toast('Invoice deleted.', 'default');
+        refresh();
+      }));
+    };
+
+    renderAll();
   },
 
   /* ── Tab: Documents ── */
@@ -1623,14 +1774,19 @@ const ActionModal = {
 const BudgetModal = {
   open(projectId, budgetId, onSave) {
     const item = budgetId ? DB.budgetItems().find(b => b.id === budgetId) : null;
-
-    const body = `
+    UI.openModal(item ? 'Edit Budget Line' : 'New Budget Line', `
       <form id="form-budget">
-        <div class="form-field">
-          <label>Category</label>
-          <select name="category">
-            ${BUDGET_CATEGORIES.map(c => `<option value="${c}" ${item?.category === c ? 'selected' : ''}>${c}</option>`).join('')}
-          </select>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Category</label>
+            <select name="category">
+              ${BUDGET_CATEGORIES.map(c => `<option value="${c}" ${item?.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-field">
+            <label>WBS / Cost Centre</label>
+            <input name="wbs" placeholder="e.g. WBS-001 · People & Labour" value="${item?.wbs || ''}">
+          </div>
         </div>
         <div class="form-row">
           <div class="form-field">
@@ -1638,31 +1794,24 @@ const BudgetModal = {
             <input name="planned" type="number" min="0" required value="${item?.planned || ''}">
           </div>
           <div class="form-field">
-            <label>Actual Value (€)</label>
-            <input name="actual" type="number" min="0" value="${item?.actual || 0}">
+            <label>Notes</label>
+            <input name="notes" value="${item?.notes || ''}">
           </div>
-        </div>
-        <div class="form-field">
-          <label>Notes</label>
-          <input name="notes" value="${item?.notes || ''}">
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
           <button type="button" class="btn btn-secondary" id="budget-cancel">Cancel</button>
           <button type="submit" class="btn btn-primary">${item ? 'Save' : 'Add'}</button>
         </div>
       </form>
-    `;
-
-    UI.openModal(item ? 'Edit Category' : 'New Category', body);
+    `);
     document.getElementById('budget-cancel').addEventListener('click', UI.closeModal.bind(UI));
     document.getElementById('form-budget').addEventListener('submit', e => {
       e.preventDefault();
       const fd = new FormData(e.target);
       const data = Object.fromEntries(fd);
       data.planned = parseFloat(data.planned) || 0;
-      data.actual  = parseFloat(data.actual)  || 0;
+      data.actual = item?.actual || 0;
       data.projectId = projectId;
-
       const items = DB.budgetItems();
       if (item) {
         const idx = items.findIndex(b => b.id === budgetId);
@@ -1672,7 +1821,165 @@ const BudgetModal = {
       }
       DB.saveBudgetItems(items);
       UI.closeModal();
-      UI.toast(item ? 'Category updated.' : 'Category added.', 'success');
+      UI.toast(item ? 'Budget line updated.' : 'Budget line added.', 'success');
+      onSave?.();
+    });
+  },
+};
+
+/* ── PO Modal ──────────────────────────────────────────────── */
+
+const POModal = {
+  open(projectId, budgetItemId, poId, onSave) {
+    const po = poId ? DB.purchaseOrders().find(p => p.id === poId) : null;
+    const bId = po ? po.budgetItemId : budgetItemId;
+    UI.openModal(po ? 'Edit Purchase Order' : 'New Purchase Order', `
+      <form id="form-po">
+        <div class="form-row">
+          <div class="form-field">
+            <label>PO Number *</label>
+            <input name="poNumber" required value="${po?.poNumber || ''}">
+          </div>
+          <div class="form-field">
+            <label>Status</label>
+            <select name="status">
+              <option value="raised" ${(po?.status || 'raised') === 'raised' ? 'selected' : ''}>Raised</option>
+              <option value="issued" ${po?.status === 'issued' ? 'selected' : ''}>Issued</option>
+              <option value="closed" ${po?.status === 'closed' ? 'selected' : ''}>Closed</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Description *</label>
+          <input name="description" required value="${po?.description || ''}">
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Vendor / Supplier</label>
+            <input name="vendor" value="${po?.vendor || ''}">
+          </div>
+          <div class="form-field">
+            <label>PO Amount (€) *</label>
+            <input name="amount" type="number" min="0" required value="${po?.amount || ''}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Raised Date</label>
+            <input name="raisedDate" type="date" value="${po?.raisedDate || ''}">
+          </div>
+          <div class="form-field">
+            <label>Issued Date</label>
+            <input name="issuedDate" type="date" value="${po?.issuedDate || ''}">
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Notes</label>
+          <input name="notes" value="${po?.notes || ''}">
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button type="button" class="btn btn-secondary" id="po-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">${po ? 'Save' : 'Add PO'}</button>
+        </div>
+      </form>
+    `, true);
+    document.getElementById('po-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('form-po').addEventListener('submit', e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const data = Object.fromEntries(fd);
+      data.amount = parseFloat(data.amount) || 0;
+      data.projectId = projectId;
+      data.budgetItemId = bId;
+      const pos = DB.purchaseOrders();
+      if (po) {
+        const idx = pos.findIndex(p => p.id === poId);
+        pos[idx] = { ...po, ...data };
+      } else {
+        pos.push({ ...data, id: 'po-' + DB.uid() });
+      }
+      DB.savePurchaseOrders(pos);
+      UI.closeModal();
+      UI.toast(po ? 'PO updated.' : 'PO added.', 'success');
+      onSave?.();
+    });
+  },
+};
+
+/* ── Invoice Modal ─────────────────────────────────────────── */
+
+const InvoiceModal = {
+  open(projectId, poId, invoiceId, onSave) {
+    const inv = invoiceId ? DB.invoices().find(i => i.id === invoiceId) : null;
+    const pid = inv ? inv.poId : poId;
+    UI.openModal(inv ? 'Edit Invoice' : 'New Invoice', `
+      <form id="form-invoice">
+        <div class="form-row">
+          <div class="form-field">
+            <label>Invoice Number *</label>
+            <input name="invoiceNumber" required value="${inv?.invoiceNumber || ''}">
+          </div>
+          <div class="form-field">
+            <label>Status</label>
+            <select name="status">
+              <option value="pending"  ${(inv?.status || 'pending')  === 'pending'  ? 'selected' : ''}>Pending</option>
+              <option value="approved" ${inv?.status === 'approved' ? 'selected' : ''}>Approved</option>
+              <option value="paid"     ${inv?.status === 'paid'     ? 'selected' : ''}>Paid</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Description</label>
+          <input name="description" value="${inv?.description || ''}">
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Amount (€) *</label>
+            <input name="amount" type="number" min="0" required value="${inv?.amount || ''}">
+          </div>
+          <div class="form-field">
+            <label>Invoice Date</label>
+            <input name="invoiceDate" type="date" value="${inv?.invoiceDate || ''}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Due Date</label>
+            <input name="dueDate" type="date" value="${inv?.dueDate || ''}">
+          </div>
+          <div class="form-field">
+            <label>Paid Date</label>
+            <input name="paidDate" type="date" value="${inv?.paidDate || ''}">
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Notes</label>
+          <input name="notes" value="${inv?.notes || ''}">
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button type="button" class="btn btn-secondary" id="invoice-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">${inv ? 'Save' : 'Add Invoice'}</button>
+        </div>
+      </form>
+    `, true);
+    document.getElementById('invoice-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('form-invoice').addEventListener('submit', e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const data = Object.fromEntries(fd);
+      data.amount = parseFloat(data.amount) || 0;
+      data.projectId = projectId;
+      data.poId = pid;
+      const invoices = DB.invoices();
+      if (inv) {
+        const idx = invoices.findIndex(i => i.id === invoiceId);
+        invoices[idx] = { ...inv, ...data };
+      } else {
+        invoices.push({ ...data, id: 'inv-' + DB.uid() });
+      }
+      DB.saveInvoices(invoices);
+      UI.closeModal();
+      UI.toast(inv ? 'Invoice updated.' : 'Invoice added.', 'success');
       onSave?.();
     });
   },

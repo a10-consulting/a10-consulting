@@ -1270,3 +1270,19 @@ p { margin: 0 0 .5em; }
     transition: none !important;
   }
 }
+
+/* ── Budget Hierarchy ──────────────────────── */
+.expand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 10px;
+  color: var(--mid);
+  padding: 2px 4px;
+  line-height: 1;
+  border-radius: 3px;
+  transition: background .15s;
+}
+.expand-btn:hover { background: var(--line); }
+.budget-cat-row { background: var(--white); }
+.budget-cat-row:hover { background: var(--grey); }
