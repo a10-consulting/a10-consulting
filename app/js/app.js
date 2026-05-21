@@ -1,5 +1,5 @@
 /* ============================================================
-   A10 Projects — Application JavaScript
+   A10 Consulting — Application JavaScript
    Single-file SPA with localStorage persistence
    ============================================================ */
 
@@ -11,13 +11,6 @@ const USERS = [
   { id: 1, name: 'Alexandre Costa',  email: 'admin@a10-consulting.com', password: 'a10admin2026', role: 'admin',      avatar: 'AC' },
   { id: 2, name: 'Sofia Martins',    email: 'ops@a10-consulting.com',   password: 'a10ops2026',   role: 'consultant', avatar: 'SM' },
   { id: 3, name: 'Ricardo Ferreira', email: 'r.ferreira@a10-consulting.com', password: 'a10rf2026', role: 'consultant', avatar: 'RF' },
-];
-
-const SECTORS = [
-  'Mining & Exploration',
-  'Supply Chain & Logistics',
-  'Operations & Infrastructure',
-  'Performance & Cost Transformation',
 ];
 
 const PHASES = ['Diagnose', 'Design', 'Execute', 'Deliver'];
@@ -55,12 +48,12 @@ const SEED = {
       id: 'proj-1',
       name: 'Mining Operations Optimisation',
       client: 'Acme Resources Ltd',
-      sector: 'Mining & Exploration',
       status: 'active',
       lead: 'Alexandre Costa',
       memberIds: [1, 2],
       primaryCurrency: 'USD',
       secondaryCurrency: 'EUR',
+
       startDate: '2026-01-15',
       endDate: '2026-06-30',
       budget: 250000,
@@ -71,7 +64,6 @@ const SEED = {
       id: 'proj-2',
       name: 'Supply Chain Redesign',
       client: 'GlobalTrans SA',
-      sector: 'Supply Chain & Logistics',
       status: 'active',
       lead: 'Sofia Martins',
       memberIds: [2, 3],
@@ -87,7 +79,6 @@ const SEED = {
       id: 'proj-3',
       name: 'Infrastructure Delivery Programme',
       client: 'BuildCorp International',
-      sector: 'Operations & Infrastructure',
       status: 'on-hold',
       lead: 'Alexandre Costa',
       memberIds: [1, 3],
@@ -103,7 +94,6 @@ const SEED = {
       id: 'proj-4',
       name: 'EBITDA Improvement Initiative',
       client: 'Meridian Industrial Group',
-      sector: 'Performance & Cost Transformation',
       status: 'completed',
       lead: 'Ricardo Ferreira',
       memberIds: [3],
@@ -241,10 +231,10 @@ const SEED = {
     },
   ],
   clients: [
-    { id: 'cli-1', name: 'Acme Resources Ltd',       sector: 'Mining & Exploration',              contact: 'James Whitfield', email: 'j.whitfield@acme.com',      phone: '+61 8 9000 1234',  country: 'Australia',    notes: 'Key account. Ongoing relationship since 2024.' },
-    { id: 'cli-2', name: 'GlobalTrans SA',            sector: 'Supply Chain & Logistics',          contact: 'Marie Dupont',    email: 'm.dupont@globaltrans.com',   phone: '+27 21 555 0100',  country: 'South Africa', notes: '' },
-    { id: 'cli-3', name: 'BuildCorp International',   sector: 'Operations & Infrastructure',       contact: 'David Keane',     email: 'd.keane@buildcorp.com',      phone: '+351 22 300 4000', country: 'Portugal',     notes: 'Project on hold — awaiting governance approval.' },
-    { id: 'cli-4', name: 'Meridian Industrial Group', sector: 'Performance & Cost Transformation', contact: 'Sarah Okonkwo',   email: 's.okonkwo@meridian.com',     phone: '+27 11 200 3300',  country: 'South Africa', notes: 'Completed engagement. Strong results.' },
+    { id: 'cli-1', name: 'Acme Resources Ltd',       contact: 'James Whitfield', email: 'j.whitfield@acme.com',      phone: '+61 8 9000 1234',  country: 'Australia',    notes: 'Key account. Ongoing relationship since 2024.' },
+    { id: 'cli-2', name: 'GlobalTrans SA',            contact: 'Marie Dupont',    email: 'm.dupont@globaltrans.com',   phone: '+27 21 555 0100',  country: 'South Africa', notes: '' },
+    { id: 'cli-3', name: 'BuildCorp International',   contact: 'David Keane',     email: 'd.keane@buildcorp.com',      phone: '+351 22 300 4000', country: 'Portugal',     notes: 'Project on hold — awaiting governance approval.' },
+    { id: 'cli-4', name: 'Meridian Industrial Group', contact: 'Sarah Okonkwo',   email: 's.okonkwo@meridian.com',     phone: '+27 11 200 3300',  country: 'South Africa', notes: 'Completed engagement. Strong results.' },
   ],
   suppliers: [
     { id: 'sup-1', name: 'Apex Drilling Services', category: 'Technical Services', contact: 'Chris Moran',    email: 'c.moran@apexdrilling.com',  phone: '+61 8 9100 2200',  country: 'Australia',    notes: 'Primary drilling contractor for Mining Optimisation.' },
@@ -461,7 +451,7 @@ const UI = {
   setTitle(title, breadcrumb = '') {
     document.getElementById('page-title').textContent = title;
     document.getElementById('breadcrumb').textContent = breadcrumb;
-    document.title = `${title} — A10 Projects`;
+    document.title = `${title} — A10 Consulting`;
   },
 
   setHeaderActions(html) {
@@ -739,12 +729,12 @@ const Router = {
     // Canvas charts are stateless; nothing to destroy.
 
     if (route === 'dashboard') {
-      UI.setTitle('Dashboard', 'A10 Projects');
+      UI.setTitle('Dashboard', 'A10 Consulting');
       UI.setHeaderActions('<button class="btn btn-primary" id="btn-new-project">+ New Project</button>');
       Dashboard.render();
       document.getElementById('btn-new-project')?.addEventListener('click', () => ProjectModal.open());
     } else if (route === 'active-projects') {
-      UI.setTitle('Active Projects', 'A10 Projects');
+      UI.setTitle('Active Projects', 'A10 Consulting');
       UI.setHeaderActions('<button class="btn btn-primary" id="btn-new-project">+ New Project</button>');
       ActiveProjectsView.render();
       document.getElementById('btn-new-project')?.addEventListener('click', () => ProjectModal.open());
@@ -758,7 +748,7 @@ const Router = {
       `);
       ProjectView.render(proj.id);
     } else if (route === 'reports') {
-      UI.setTitle('Reports', 'A10 Projects');
+      UI.setTitle('Reports', 'A10 Consulting');
       UI.setHeaderActions('');
       ReportsView.render();
     } else if (route === 'finance') {
@@ -773,17 +763,17 @@ const Router = {
       document.getElementById('btn-new-inv')?.addEventListener('click', () => A10InvoiceModal.open(null, 'invoice'));
       document.getElementById('btn-new-cn')?.addEventListener('click', () => A10InvoiceModal.open(null, 'credit-note'));
     } else if (route === 'clients') {
-      UI.setTitle('Clients', 'A10 Projects');
+      UI.setTitle('Clients', 'A10 Consulting');
       UI.setHeaderActions('<button class="btn btn-primary" id="btn-new-client">+ New Client</button>');
       ClientsView.render();
       document.getElementById('btn-new-client')?.addEventListener('click', () => ClientsView.openModal());
     } else if (route === 'suppliers') {
-      UI.setTitle('Suppliers', 'A10 Projects');
+      UI.setTitle('Suppliers', 'A10 Consulting');
       UI.setHeaderActions('<button class="btn btn-primary" id="btn-new-supplier">+ New Supplier</button>');
       SuppliersView.render();
       document.getElementById('btn-new-supplier')?.addEventListener('click', () => SuppliersView.openModal());
     } else if (route === 'users') {
-      UI.setTitle('Users', 'A10 Projects');
+      UI.setTitle('Users', 'A10 Consulting');
       UI.setHeaderActions('');
       UsersView.render();
     } else if (route === 'admin') {
@@ -831,7 +821,7 @@ const ActiveProjectsView = {
       document.getElementById('active-table-wrap').innerHTML = list.length ? `
         <table class="data-table">
           <thead>
-            <tr><th>Project / Client</th><th>Sector</th><th>Lead</th><th>Completion</th><th>Budget Used</th><th>Deadline</th><th></th></tr>
+            <tr><th>Project / Client</th><th>Lead</th><th>Completion</th><th>Budget Used</th><th>Deadline</th><th></th></tr>
           </thead>
           <tbody>
             ${list.map(p => {
@@ -846,7 +836,6 @@ const ActiveProjectsView = {
                     <span class="project-client">${p.client}</span>
                   </div>
                 </td>
-                <td><span style="font-size:12px;color:var(--mid)">${p.sector}</span></td>
                 <td style="font-size:13px;white-space:nowrap">${p.lead}</td>
                 <td style="min-width:120px">${progressBar(pct)}</td>
                 <td style="font-size:13px;white-space:nowrap">
@@ -961,7 +950,6 @@ const Dashboard = {
         <thead>
           <tr>
             <th>Project / Client</th>
-            <th>Sector</th>
             <th>Status</th>
             <th>Health</th>
             <th>Lead</th>
@@ -984,7 +972,6 @@ const Dashboard = {
                   <span class="project-client">${p.client}</span>
                 </div>
               </td>
-              <td><span style="font-size:12px;color:var(--mid)">${p.sector}</span></td>
               <td>${statusBadge(p.status)}</td>
               <td>${healthBadge(DB.projectHealth(p.id))}</td>
               <td style="font-size:13px;white-space:nowrap">${p.lead}</td>
@@ -1103,10 +1090,6 @@ const ProjectView = {
         <div class="info-card">
           <div class="info-card-label">Client</div>
           <div class="info-card-value">${proj.client}</div>
-        </div>
-        <div class="info-card">
-          <div class="info-card-label">Sector</div>
-          <div class="info-card-value">${proj.sector}</div>
         </div>
         <div class="info-card">
           <div class="info-card-label">Status</div>
@@ -1916,12 +1899,6 @@ const ProjectModal = {
         </div>
         <div class="form-row">
           <div class="form-field">
-            <label>Sector</label>
-            <select name="sector">
-              ${SECTORS.map(s => `<option value="${s}" ${proj?.sector === s ? 'selected' : ''}>${s}</option>`).join('')}
-            </select>
-          </div>
-          <div class="form-field">
             <label>Status</label>
             <select name="status">
               ${PROJECT_STATUSES.map(s => `<option value="${s}" ${(proj?.status || 'active') === s ? 'selected' : ''}>${statusLabel(s)}</option>`).join('')}
@@ -2592,7 +2569,6 @@ const DocGenerator = {
     if (doc.type === 'project-brief') {
       bodyHtml = `
         <div class="doc-print-field"><div class="doc-print-field-label">Client</div><div class="doc-print-field-value">${proj.client}</div></div>
-        <div class="doc-print-field"><div class="doc-print-field-label">Sector</div><div class="doc-print-field-value">${proj.sector}</div></div>
         <div class="doc-print-field"><div class="doc-print-field-label">A10 Lead</div><div class="doc-print-field-value">${proj.lead}</div></div>
         <h2>Objective</h2><p>${c.objective}</p>
         <h2>Scope</h2><p>${c.scope}</p>
@@ -2670,11 +2646,10 @@ const ClientsView = {
       <div class="section-card">
         ${clients.length ? `
           <table class="data-table">
-            <thead><tr><th>Name</th><th>Sector</th><th>Contact</th><th>Email</th><th>Phone</th><th>Country</th><th>Notes</th><th></th></tr></thead>
+            <thead><tr><th>Name</th><th>Contact</th><th>Email</th><th>Phone</th><th>Country</th><th>Notes</th><th></th></tr></thead>
             <tbody>
               ${clients.map(c => `<tr>
                 <td style="font-weight:700">${c.name}</td>
-                <td style="font-size:12px;color:var(--mid)">${c.sector}</td>
                 <td style="font-size:13px">${c.contact}</td>
                 <td style="font-size:12px"><a href="mailto:${c.email}" style="color:var(--accent)">${c.email}</a></td>
                 <td style="font-size:12px;color:var(--mid);white-space:nowrap">${c.phone}</td>
@@ -2704,9 +2679,6 @@ const ClientsView = {
         <div class="form-section-title">Contact Details</div>
         <div class="form-row">
           <div class="form-field"><label>Company Name *</label><input name="name" required value="${c?.name || ''}"></div>
-          <div class="form-field"><label>Sector</label>
-            <select name="sector">${SECTORS.map(s => `<option value="${s}" ${c?.sector === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
-          </div>
         </div>
         <div class="form-row">
           <div class="form-field"><label>Contact Person</label><input name="contact" value="${c?.contact || ''}"></div>
