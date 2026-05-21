@@ -398,11 +398,101 @@ p { margin: 0 0 .5em; }
   text-overflow: ellipsis;
 }
 
-.header-actions {
+.header-right {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── NOTIFICATIONS BELL ───────────────────── */
+.notif-wrap { position: relative; }
+
+.notif-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--navy);
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: background 0.15s;
+}
+.notif-btn:hover { background: var(--grey); }
+
+.notif-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 100px;
+  font-size: 9px;
+  font-weight: 900;
+  min-width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  pointer-events: none;
+}
+
+.notif-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  width: 320px;
+  z-index: 200;
+  overflow: hidden;
+}
+
+.notif-header {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--line);
+  transition: background 0.12s;
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: var(--grey); }
+
+.notif-icon { font-size: 15px; flex-shrink: 0; line-height: 1.5; }
+
+.notif-text { font-size: 12px; font-weight: 600; color: var(--navy); line-height: 1.4; }
+
+.notif-sub { font-size: 11px; color: var(--mid); margin-top: 2px; }
+
+.notif-empty {
+  padding: 20px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--mid);
 }
 
 .main-content {

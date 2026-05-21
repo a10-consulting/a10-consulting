@@ -180,6 +180,14 @@ const SEED = {
     { id: 'inv-8', poId: 'po-5', projectId: 'proj-2', invoiceNumber: 'TOS-2026-001', description: 'WMS Integration – Milestone 1', amount: 12000, invoiceDate: '2026-02-15', dueDate: '2026-03-15', status: 'paid', paidDate: '2026-03-10', notes: '' },
     { id: 'inv-9', poId: 'po-5', projectId: 'proj-2', invoiceNumber: 'TOS-2026-002', description: 'WMS Integration – Milestone 2', amount: 6000, invoiceDate: '2026-03-31', dueDate: '2026-04-30', status: 'pending', paidDate: '', notes: '' },
   ],
+  risks: [
+    { id: 'rsk-1', projectId: 'proj-1', description: 'Key personnel unavailability during critical execution phase', category: 'Resource', probability: 'medium', impact: 'high', owner: 'Alexandre Costa', mitigation: 'Identify backup resources and cross-train team members; document critical knowledge', status: 'open', createdAt: '2026-01-20T09:00:00Z' },
+    { id: 'rsk-2', projectId: 'proj-1', description: 'Scope creep from additional client requests outside agreed scope', category: 'Commercial', probability: 'high', impact: 'medium', owner: 'Alexandre Costa', mitigation: 'Strict change control process with documented sign-off and commercial impact assessment', status: 'open', createdAt: '2026-01-20T09:00:00Z' },
+    { id: 'rsk-3', projectId: 'proj-1', description: 'Contractor resistance to renegotiated terms', category: 'External', probability: 'medium', impact: 'high', owner: 'Alexandre Costa', mitigation: 'Prepare alternative contractor options; engage senior client sponsor for negotiations', status: 'mitigated', createdAt: '2026-02-01T10:00:00Z' },
+    { id: 'rsk-4', projectId: 'proj-2', description: 'WMS integration delays from technology vendor side', category: 'Technical', probability: 'medium', impact: 'high', owner: 'Sofia Martins', mitigation: 'Parallel implementation track with alternative WMS provider; contractual penalty clauses', status: 'open', createdAt: '2025-11-10T10:00:00Z' },
+    { id: 'rsk-5', projectId: 'proj-2', description: 'Vendor contract negotiations extending beyond planned timeline', category: 'Schedule', probability: 'high', impact: 'medium', owner: 'Sofia Martins', mitigation: 'Parallel-tracking two vendors to reduce dependency; weekly steering committee review', status: 'mitigated', createdAt: '2025-11-15T09:00:00Z' },
+    { id: 'rsk-6', projectId: 'proj-3', description: 'Client governance approval delay blocking project mobilisation', category: 'External', probability: 'high', impact: 'high', owner: 'Alexandre Costa', mitigation: 'Executive escalation; prepare fast-track approval documentation; weekly client engagement', status: 'open', createdAt: '2026-02-10T09:00:00Z' },
+  ],
   documents: [
     {
       id: 'd1',
@@ -263,8 +271,10 @@ const DB = {
 
   purchaseOrders() { return this.get('purchaseOrders') || []; },
   invoices()       { return this.get('invoices')       || []; },
+  risks()          { return this.get('risks')          || []; },
   savePurchaseOrders(arr) { this.set('purchaseOrders', arr); },
   saveInvoices(arr)       { this.set('invoices', arr); },
+  saveRisks(arr)          { this.set('risks', arr); },
 
   projectById(id)  { return this.projects().find(p => p.id === id); },
 
@@ -290,6 +300,34 @@ const DB = {
       .reduce((s, b) => s + (b.planned || 0), 0);
   },
 
+  /* Computed: auto health score — null for completed/draft */
+  projectHealth(projectId) {
+    const proj = this.projectById(projectId);
+    if (!proj || proj.status === 'completed' || proj.status === 'draft') return null;
+    const pct = this.projectCompletion(projectId);
+    const planned = this.projectPlanned(projectId);
+    const spent = this.projectSpent(projectId);
+    const budgetPct = planned ? Math.round(spent / planned * 100) : 0;
+    const actions = this.actionItems().filter(a => a.projectId === projectId);
+    const overdueActions = actions.filter(a => a.status !== 'done' && isOverdue(a.dueDate)).length;
+    const criticalOpen   = actions.filter(a => a.status !== 'done' && a.priority === 'critical').length;
+    const today = new Date();
+    const end   = proj.endDate   ? new Date(proj.endDate)   : null;
+    const start = proj.startDate ? new Date(proj.startDate) : null;
+    const totalDays = end && start ? (end - start) / 86400000 : null;
+    const elapsed   = start ? (today - start) / 86400000 : null;
+    const schedulePct = totalDays && elapsed > 0 ? Math.min(100, Math.round(elapsed / totalDays * 100)) : 0;
+    let score = 0;
+    const gap = schedulePct - pct;
+    if (gap > 20) score += 2; else if (gap > 10) score += 1;
+    if (budgetPct > 90) score += 2; else if (budgetPct > 75) score += 1;
+    if (overdueActions > 3) score += 2; else if (overdueActions > 0) score += 1;
+    if (criticalOpen > 0) score += 1;
+    if (score >= 4) return 'off-track';
+    if (score >= 2) return 'at-risk';
+    return 'on-track';
+  },
+
   uid() { return Math.random().toString(36).slice(2, 10); },
 
   seed() {
@@ -304,6 +342,7 @@ const DB = {
     this.saveUsers(USERS);
     this.savePurchaseOrders(SEED.purchaseOrders);
     this.saveInvoices(SEED.invoices);
+    this.saveRisks(SEED.risks);
     this.set('seeded', true);
   },
 };
@@ -487,6 +526,27 @@ function progressBar(pct) {
   </div>`;
 }
 
+function healthBadge(health) {
+  if (!health) return '';
+  const map = {
+    'on-track':  ['On Track',  '#16a34a', '#dcfce7'],
+    'at-risk':   ['At Risk',   '#d97706', '#fef3c7'],
+    'off-track': ['Off Track', '#dc2626', '#fee2e2'],
+  };
+  const [label, color, bg] = map[health] || ['—', '#6b7280', '#f3f4f6'];
+  return `<span style="display:inline-block;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:700;background:${bg};color:${color}">${label}</span>`;
+}
+
+function riskScoreBadge(prob, impact) {
+  const p = { low: 1, medium: 2, high: 3 }[prob] || 1;
+  const i = { low: 1, medium: 2, high: 3 }[impact] || 1;
+  const score = p * i;
+  if (score >= 6) return `<span style="display:inline-block;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:700;background:#fee2e2;color:#dc2626">Critical (${score})</span>`;
+  if (score >= 4) return `<span style="display:inline-block;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:700;background:#fef3c7;color:#d97706">High (${score})</span>`;
+  if (score >= 2) return `<span style="display:inline-block;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:700;background:#dbeafe;color:#3e6697">Medium (${score})</span>`;
+  return `<span style="display:inline-block;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:700;background:#dcfce7;color:#16a34a">Low (${score})</span>`;
+}
+
 function printContent(html) {
   const cssText = Array.from(document.styleSheets)
     .map(s => { try { return Array.from(s.cssRules).map(r => r.cssText).join('\n'); } catch { return ''; } })
@@ -497,6 +557,87 @@ function printContent(html) {
   win.focus();
   setTimeout(() => { win.print(); }, 600);
 }
+
+/* ── Notifications ─────────────────────────────────────────── */
+
+const Notifications = {
+  _open: false,
+
+  refresh() {
+    const count = this._getItems().length;
+    const badge = document.getElementById('notif-badge');
+    if (!badge) return;
+    badge.textContent = count;
+    if (count > 0) badge.classList.remove('hidden'); else badge.classList.add('hidden');
+  },
+
+  _getItems() {
+    const today = new Date();
+    const items = [];
+    DB.actionItems()
+      .filter(a => a.status !== 'done' && a.dueDate && new Date(a.dueDate) < today)
+      .forEach(a => {
+        const proj = DB.projectById(a.projectId);
+        items.push({ type: 'action', text: a.description, sub: proj?.name || '', id: a.projectId });
+      });
+    DB.tasks()
+      .filter(t => t.status !== 'completed' && t.dueDate && new Date(t.dueDate) < today)
+      .forEach(t => {
+        const proj = DB.projectById(t.projectId);
+        items.push({ type: 'task', text: t.name, sub: proj?.name || '', id: t.projectId });
+      });
+    DB.projects().filter(p => p.status === 'active').forEach(p => {
+      const planned = DB.projectPlanned(p.id);
+      const spent   = DB.projectSpent(p.id);
+      if (planned > 0 && spent / planned > 0.9) {
+        items.push({ type: 'budget', text: 'Budget >90% consumed', sub: p.name, id: p.id });
+      }
+    });
+    return items;
+  },
+
+  toggle() {
+    this._open = !this._open;
+    const dropdown = document.getElementById('notif-dropdown');
+    if (!dropdown) return;
+    if (this._open) {
+      dropdown.innerHTML = this._buildDropdown();
+      dropdown.classList.remove('hidden');
+      dropdown.querySelectorAll('[data-notif-project]').forEach(el => {
+        el.addEventListener('click', () => {
+          Router.go('project', el.dataset.notifProject);
+          this.close();
+        });
+      });
+    } else {
+      dropdown.classList.add('hidden');
+    }
+  },
+
+  close() {
+    this._open = false;
+    document.getElementById('notif-dropdown')?.classList.add('hidden');
+  },
+
+  _buildDropdown() {
+    const items = this._getItems();
+    const iconMap = { action: '⚠️', task: '🕐', budget: '💰' };
+    return `
+      <div class="notif-header">Alerts (${items.length})</div>
+      ${items.length
+        ? items.map(it => `
+          <div class="notif-item" data-notif-project="${it.id}">
+            <div class="notif-icon">${iconMap[it.type]}</div>
+            <div>
+              <div class="notif-text">${it.text}</div>
+              <div class="notif-sub">${it.sub}</div>
+            </div>
+          </div>`).join('')
+        : `<div class="notif-empty">No alerts — all on track.</div>`
+      }
+    `;
+  },
+};
 
 /* ── Router ────────────────────────────────────────────────── */
 
@@ -515,6 +656,8 @@ const Router = {
     document.getElementById('app').classList.remove('hidden');
     this._updateNav(route);
     this.current = route;
+    Notifications.close();
+    Notifications.refresh();
 
     const content = document.getElementById('main-content');
     content.innerHTML = '';
@@ -730,6 +873,7 @@ const Dashboard = {
             <th>Project / Client</th>
             <th>Sector</th>
             <th>Status</th>
+            <th>Health</th>
             <th>Lead</th>
             <th>Completion</th>
             <th>Budget</th>
@@ -752,6 +896,7 @@ const Dashboard = {
               </td>
               <td><span style="font-size:12px;color:var(--mid)">${p.sector}</span></td>
               <td>${statusBadge(p.status)}</td>
+              <td>${healthBadge(DB.projectHealth(p.id))}</td>
               <td style="font-size:13px;white-space:nowrap">${p.lead}</td>
               <td style="min-width:120px">${progressBar(pct)}</td>
               <td style="font-size:13px;white-space:nowrap">
@@ -817,6 +962,7 @@ const ProjectView = {
       { id: 'action-plan',  label: 'Action Plan' },
       { id: 'budget',       label: 'Budget' },
       { id: 'documents',    label: 'Documents' },
+      { id: 'risks',        label: 'Risk Register' },
     ];
 
     document.getElementById('main-content').innerHTML = `
@@ -847,6 +993,7 @@ const ProjectView = {
     if (this.activeTab === 'action-plan') this._renderActionPlan(proj, tc);
     if (this.activeTab === 'budget')      this._renderBudget(proj, tc);
     if (this.activeTab === 'documents')   this._renderDocuments(proj, tc);
+    if (this.activeTab === 'risks')       this._renderRisks(proj, tc);
   },
 
   /* ── Tab: Overview ── */
@@ -887,6 +1034,11 @@ const ProjectView = {
           <div class="info-card-value">${fmt(proj.budget)}</div>
           <div class="info-card-sub">${fmt(spent)} used (${budgetPct}%)</div>
         </div>
+        ${DB.projectHealth(proj.id) ? `
+        <div class="info-card">
+          <div class="info-card-label">Health</div>
+          <div class="info-card-value">${healthBadge(DB.projectHealth(proj.id))}</div>
+        </div>` : ''}
       </div>
 
       <div class="section-card" style="margin-bottom:16px">
@@ -1504,6 +1656,91 @@ const ProjectView = {
 
     renderDocs();
   },
+
+  /* ── Tab: Risk Register ── */
+  _renderRisks(proj, tc) {
+    const RISK_CATEGORIES = ['Technical', 'Commercial', 'Schedule', 'Resource', 'External', 'Other'];
+    const RISK_STATUSES   = ['open', 'mitigated', 'closed', 'accepted'];
+    const refresh = () => this._renderTab(proj.id);
+
+    const render = () => {
+      const risks = DB.risks().filter(r => r.projectId === proj.id);
+      const open     = risks.filter(r => r.status === 'open').length;
+      const critical = risks.filter(r => {
+        const p = { low: 1, medium: 2, high: 3 }[r.probability] || 1;
+        const i = { low: 1, medium: 2, high: 3 }[r.impact] || 1;
+        return p * i >= 6;
+      }).length;
+
+      tc.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <div class="stat-card" style="padding:10px 16px;min-width:0">
+              <div class="stat-label" style="font-size:11px">Total Risks</div>
+              <div class="stat-value" style="font-size:20px">${risks.length}</div>
+            </div>
+            <div class="stat-card" style="padding:10px 16px;min-width:0">
+              <div class="stat-label" style="font-size:11px">Open</div>
+              <div class="stat-value" style="font-size:20px;color:${open > 0 ? '#d97706' : 'inherit'}">${open}</div>
+            </div>
+            <div class="stat-card" style="padding:10px 16px;min-width:0">
+              <div class="stat-label" style="font-size:11px">Critical Score</div>
+              <div class="stat-value" style="font-size:20px;color:${critical > 0 ? '#dc2626' : 'inherit'}">${critical}</div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" id="btn-add-risk">+ Add Risk</button>
+        </div>
+        ${risks.length ? `
+          <div class="section-card" style="overflow-x:auto">
+            <table class="data-table" style="min-width:1000px">
+              <thead>
+                <tr>
+                  <th style="min-width:220px">Risk Description</th>
+                  <th style="min-width:110px">Category</th>
+                  <th style="min-width:90px">Probability</th>
+                  <th style="min-width:90px">Impact</th>
+                  <th style="min-width:110px">Score</th>
+                  <th style="min-width:130px">Owner</th>
+                  <th style="min-width:220px">Mitigation</th>
+                  <th style="min-width:90px">Status</th>
+                  <th style="min-width:80px"></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${risks.map(r => `<tr>
+                  <td style="font-weight:600;max-width:220px">${r.description}</td>
+                  <td style="font-size:12px;color:var(--mid)">${r.category}</td>
+                  <td>${priorityBadge(r.probability)}</td>
+                  <td>${priorityBadge(r.impact)}</td>
+                  <td>${riskScoreBadge(r.probability, r.impact)}</td>
+                  <td style="font-size:12px;white-space:nowrap">${r.owner}</td>
+                  <td style="font-size:12px;color:var(--mid);max-width:220px">${r.mitigation || '—'}</td>
+                  <td>${actionStatusBadge(r.status)}</td>
+                  <td>
+                    <div class="actions-cell">
+                      <button class="btn btn-secondary btn-sm" data-edit-risk="${r.id}">Edit</button>
+                      <button class="btn btn-danger btn-sm" data-delete-risk="${r.id}">✕</button>
+                    </div>
+                  </td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : `<div class="empty-state"><div class="empty-state-icon">🛡️</div><p>No risks logged. Add one to start tracking.</p></div>`}
+      `;
+
+      document.getElementById('btn-add-risk')?.addEventListener('click', () => RiskModal.open(proj.id, null, refresh));
+      tc.querySelectorAll('[data-edit-risk]').forEach(btn => btn.addEventListener('click', () => RiskModal.open(proj.id, btn.dataset.editRisk, refresh)));
+      tc.querySelectorAll('[data-delete-risk]').forEach(btn => btn.addEventListener('click', () => {
+        if (!UI.confirm('Delete this risk?')) return;
+        DB.saveRisks(DB.risks().filter(r => r.id !== btn.dataset.deleteRisk));
+        UI.toast('Risk deleted.', 'default');
+        refresh();
+      }));
+    };
+
+    render();
+  },
 };
 
 /* ── Project Modal ─────────────────────────────────────────── */
@@ -1764,6 +2001,89 @@ const ActionModal = {
       DB.saveActionItems(items);
       UI.closeModal();
       UI.toast(action ? 'Action updated.' : 'Action added.', 'success');
+      onSave?.();
+    });
+  },
+};
+
+/* ── Risk Modal ────────────────────────────────────────────── */
+
+const RiskModal = {
+  open(projectId, riskId, onSave) {
+    const risk = riskId ? DB.risks().find(r => r.id === riskId) : null;
+    const users = DB.users();
+    const RISK_CATEGORIES = ['Technical', 'Commercial', 'Schedule', 'Resource', 'External', 'Other'];
+    const RISK_STATUSES   = ['open', 'mitigated', 'closed', 'accepted'];
+    const PROB_IMPACT     = ['low', 'medium', 'high'];
+
+    const body = `
+      <form id="form-risk">
+        <div class="form-field">
+          <label>Risk Description *</label>
+          <textarea name="description" rows="2" required>${risk?.description || ''}</textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Category</label>
+            <select name="category">
+              ${RISK_CATEGORIES.map(c => `<option value="${c}" ${risk?.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Owner</label>
+            <select name="owner">
+              ${users.map(u => `<option value="${u.name}" ${risk?.owner === u.name ? 'selected' : ''}>${u.name}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Probability</label>
+            <select name="probability">
+              ${PROB_IMPACT.map(v => `<option value="${v}" ${risk?.probability === v ? 'selected' : ''}>${v[0].toUpperCase() + v.slice(1)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Impact</label>
+            <select name="impact">
+              ${PROB_IMPACT.map(v => `<option value="${v}" ${risk?.impact === v ? 'selected' : ''}>${v[0].toUpperCase() + v.slice(1)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Status</label>
+            <select name="status">
+              ${RISK_STATUSES.map(s => `<option value="${s}" ${risk?.status === s ? 'selected' : ''}>${s[0].toUpperCase() + s.slice(1)}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Mitigation</label>
+          <textarea name="mitigation" rows="2">${risk?.mitigation || ''}</textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button type="button" class="btn btn-secondary" id="risk-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">${risk ? 'Save' : 'Add Risk'}</button>
+        </div>
+      </form>
+    `;
+
+    UI.openModal(risk ? 'Edit Risk' : 'New Risk', body, true);
+    document.getElementById('risk-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('form-risk').addEventListener('submit', e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const data = Object.fromEntries(fd);
+      data.projectId = projectId;
+      const risks = DB.risks();
+      if (risk) {
+        const idx = risks.findIndex(r => r.id === riskId);
+        risks[idx] = { ...risk, ...data };
+      } else {
+        risks.push({ ...data, id: 'rsk' + DB.uid(), createdAt: new Date().toISOString() });
+      }
+      DB.saveRisks(risks);
+      UI.closeModal();
+      UI.toast(risk ? 'Risk updated.' : 'Risk added.', 'success');
       onSave?.();
     });
   },
@@ -2592,13 +2912,24 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     UI.closeModal();
     UI.closeDocPreview();
+    Notifications.close();
   }
+});
+
+/* Close notification dropdown on outside click */
+document.addEventListener('click', e => {
+  if (!e.target.closest('#notif-wrap')) Notifications.close();
 });
 
 /* ── Init ──────────────────────────────────────────────────── */
 
 (function init() {
   DB.seed();
+  /* One-time migration: populate risks for existing users who already had seeded data */
+  if (!DB.get('seeded_v2')) {
+    if (!DB.get('risks')) DB.saveRisks(SEED.risks);
+    DB.set('seeded_v2', true);
+  }
   const session = Auth.current();
   if (session) {
     document.getElementById('user-name').textContent = session.name;
