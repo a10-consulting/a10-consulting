@@ -8,9 +8,16 @@
 /* ── Constants ─────────────────────────────────────────────── */
 
 const USERS = [
-  { id: 1, name: 'Alexandre Costa',  email: 'admin@a10-consulting.com', password: 'a10admin2026', role: 'admin',      avatar: 'AC' },
-  { id: 2, name: 'Sofia Martins',    email: 'ops@a10-consulting.com',   password: 'a10ops2026',   role: 'consultant', avatar: 'SM' },
-  { id: 3, name: 'Ricardo Ferreira', email: 'r.ferreira@a10-consulting.com', password: 'a10rf2026', role: 'consultant', avatar: 'RF' },
+  { id: 1,  name: 'Alexandre Costa',  email: 'admin@a10-consulting.com',         password: 'a10admin2026', role: 'admin',      avatar: 'AC' },
+  { id: 2,  name: 'Sofia Martins',    email: 'ops@a10-consulting.com',            password: 'a10ops2026',   role: 'consultant', avatar: 'SM' },
+  { id: 3,  name: 'Ricardo Ferreira', email: 'r.ferreira@a10-consulting.com',     password: 'a10rf2026',   role: 'consultant', avatar: 'RF' },
+  { id: 4,  name: 'Maria Santos',     email: 'm.santos@a10-consulting.com',       password: 'a10ms2026',   role: 'consultant', avatar: 'MS' },
+  { id: 5,  name: 'João Ferreira',    email: 'j.ferreira@a10-consulting.com',     password: 'a10jf2026',   role: 'consultant', avatar: 'JF' },
+  { id: 6,  name: 'Ana Rodrigues',    email: 'a.rodrigues@a10-consulting.com',    password: 'a10ar2026',   role: 'consultant', avatar: 'AR' },
+  { id: 7,  name: 'Miguel Carvalho',  email: 'm.carvalho@a10-consulting.com',     password: 'a10mc2026',   role: 'consultant', avatar: 'MC' },
+  { id: 8,  name: 'Catarina Lima',    email: 'c.lima@a10-consulting.com',         password: 'a10cl2026',   role: 'consultant', avatar: 'CL' },
+  { id: 9,  name: 'Pedro Sousa',      email: 'p.sousa@a10-consulting.com',        password: 'a10ps2026',   role: 'consultant', avatar: 'PS' },
+  { id: 10, name: 'Isabel Pereira',   email: 'i.pereira@a10-consulting.com',      password: 'a10ip2026',   role: 'admin',      avatar: 'IP' },
 ];
 
 const PHASES = ['Diagnose', 'Design', 'Execute', 'Deliver'];
@@ -105,6 +112,54 @@ const SEED = {
       description: 'Structured cost reduction programme targeting structural inefficiencies across operations, procurement and overhead. Delivered +8pp EBITDA margin improvement within five months.',
       createdAt: '2025-07-25T11:00:00Z',
     },
+    {
+      id: 'proj-5', name: 'Digital Transformation Programme', client: 'Nexus Group',
+      status: 'active', lead: 'Maria Santos', memberIds: [4, 5, 2],
+      primaryCurrency: 'EUR', secondaryCurrency: 'USD',
+      startDate: '2026-03-01', endDate: '2026-11-30', budget: 320000,
+      description: 'End-to-end digital transformation covering ERP migration, process automation and data analytics capability build across 5 business units.',
+      createdAt: '2026-02-20T09:00:00Z',
+    },
+    {
+      id: 'proj-6', name: 'HR Restructuring & Talent Strategy', client: 'Pinnacle Energy',
+      status: 'active', lead: 'Ana Rodrigues', memberIds: [6, 1],
+      primaryCurrency: 'USD', secondaryCurrency: 'EUR',
+      startDate: '2026-01-10', endDate: '2026-07-31', budget: 140000,
+      description: 'Organisational redesign and HR function transformation including workforce planning, compensation benchmarking and leadership development framework.',
+      createdAt: '2026-01-05T10:00:00Z',
+    },
+    {
+      id: 'proj-7', name: 'ESG Strategy & Reporting Framework', client: 'Vortex Mining Corp',
+      status: 'on-hold', lead: 'João Ferreira', memberIds: [5, 3],
+      primaryCurrency: 'AUD', secondaryCurrency: 'USD',
+      startDate: '2026-04-01', endDate: '2026-09-30', budget: 95000,
+      description: 'Design and implementation of ESG strategy, materiality assessment, KPI framework and regulatory reporting capability in line with GRI and ISSB standards.',
+      createdAt: '2026-03-15T08:00:00Z',
+    },
+    {
+      id: 'proj-8', name: 'Market Entry — East Africa', client: 'Horizon Commodities',
+      status: 'active', lead: 'Miguel Carvalho', memberIds: [7, 4, 6],
+      primaryCurrency: 'USD', secondaryCurrency: 'XAF',
+      startDate: '2026-02-15', endDate: '2026-08-31', budget: 210000,
+      description: 'Market entry strategy and execution for expansion into Kenya, Tanzania and Mozambique, covering regulatory analysis, partner identification and commercial structuring.',
+      createdAt: '2026-02-10T11:00:00Z',
+    },
+    {
+      id: 'proj-9', name: 'Working Capital Optimisation', client: 'Meridian Industrial Group',
+      status: 'completed', lead: 'Pedro Sousa', memberIds: [9, 3],
+      primaryCurrency: 'EUR', secondaryCurrency: 'USD',
+      startDate: '2025-06-01', endDate: '2025-12-31', budget: 130000,
+      description: 'Structured programme to improve working capital cycle through accounts receivable acceleration, inventory rationalisation and supplier payment term renegotiation.',
+      createdAt: '2025-05-20T09:00:00Z',
+    },
+    {
+      id: 'proj-10', name: 'Operational Excellence — Refinery', client: 'Gulf Industrial Partners',
+      status: 'active', lead: 'Catarina Lima', memberIds: [8, 1, 5],
+      primaryCurrency: 'USD', secondaryCurrency: 'EUR',
+      startDate: '2026-04-01', endDate: '2027-01-31', budget: 480000,
+      description: 'Multi-phase operational excellence programme for a mid-size refinery targeting OEE improvement, maintenance optimisation and HSE compliance uplift.',
+      createdAt: '2026-03-25T08:00:00Z',
+    },
   ],
   tasks: [
     /* proj-1 */
@@ -131,6 +186,34 @@ const SEED = {
     { id: 't18', projectId: 'proj-4', name: 'Cost Reduction Roadmap',  phase: 'Design',   assignee: 'Ricardo Ferreira', startDate: '2025-09-01', dueDate: '2025-09-30', status: 'completed', percentDone: 100 },
     { id: 't19', projectId: 'proj-4', name: 'Cost Reduction Execution',phase: 'Execute',  assignee: 'Ricardo Ferreira', startDate: '2025-10-01', dueDate: '2025-11-30', status: 'completed', percentDone: 100 },
     { id: 't20', projectId: 'proj-4', name: 'Results Validation',      phase: 'Deliver',  assignee: 'Ricardo Ferreira', startDate: '2025-12-01', dueDate: '2025-12-31', status: 'completed', percentDone: 100 },
+    /* proj-5 */
+    { id: 't21', projectId: 'proj-5', name: 'Current State Assessment', phase: 'Diagnose', assignee: 'Maria Santos', startDate: '2026-03-01', dueDate: '2026-03-31', status: 'completed', percentDone: 100 },
+    { id: 't22', projectId: 'proj-5', name: 'Technology Architecture Design', phase: 'Design', assignee: 'João Ferreira', startDate: '2026-04-01', dueDate: '2026-05-15', status: 'in-progress', percentDone: 65 },
+    { id: 't23', projectId: 'proj-5', name: 'ERP Migration Planning', phase: 'Design', assignee: 'Maria Santos', startDate: '2026-04-15', dueDate: '2026-05-31', status: 'in-progress', percentDone: 40 },
+    { id: 't24', projectId: 'proj-5', name: 'Process Automation Rollout', phase: 'Execute', assignee: 'Sofia Martins', startDate: '2026-06-01', dueDate: '2026-09-30', status: 'todo', percentDone: 0 },
+    { id: 't25', projectId: 'proj-5', name: 'User Training & Change Management', phase: 'Deliver', assignee: 'Maria Santos', startDate: '2026-10-01', dueDate: '2026-11-30', status: 'todo', percentDone: 0 },
+    /* proj-6 */
+    { id: 't26', projectId: 'proj-6', name: 'Org Design Diagnostic', phase: 'Diagnose', assignee: 'Ana Rodrigues', startDate: '2026-01-10', dueDate: '2026-01-31', status: 'completed', percentDone: 100 },
+    { id: 't27', projectId: 'proj-6', name: 'Compensation Benchmarking', phase: 'Diagnose', assignee: 'Alexandre Costa', startDate: '2026-01-20', dueDate: '2026-02-15', status: 'completed', percentDone: 100 },
+    { id: 't28', projectId: 'proj-6', name: 'New Structure Design', phase: 'Design', assignee: 'Ana Rodrigues', startDate: '2026-02-16', dueDate: '2026-03-31', status: 'in-progress', percentDone: 80 },
+    { id: 't29', projectId: 'proj-6', name: 'Implementation & Transition', phase: 'Execute', assignee: 'Ana Rodrigues', startDate: '2026-04-01', dueDate: '2026-06-30', status: 'todo', percentDone: 0 },
+    /* proj-7 */
+    { id: 't30', projectId: 'proj-7', name: 'Materiality Assessment', phase: 'Diagnose', assignee: 'João Ferreira', startDate: '2026-04-01', dueDate: '2026-04-30', status: 'todo', percentDone: 0 },
+    { id: 't31', projectId: 'proj-7', name: 'ESG Framework Design', phase: 'Design', assignee: 'Ricardo Ferreira', startDate: '2026-05-01', dueDate: '2026-06-30', status: 'todo', percentDone: 0 },
+    /* proj-8 */
+    { id: 't32', projectId: 'proj-8', name: 'Regulatory & Market Analysis', phase: 'Diagnose', assignee: 'Miguel Carvalho', startDate: '2026-02-15', dueDate: '2026-03-15', status: 'completed', percentDone: 100 },
+    { id: 't33', projectId: 'proj-8', name: 'Partner Identification', phase: 'Diagnose', assignee: 'Ana Rodrigues', startDate: '2026-03-01', dueDate: '2026-03-31', status: 'in-progress', percentDone: 70 },
+    { id: 't34', projectId: 'proj-8', name: 'Commercial Structure Design', phase: 'Design', assignee: 'Miguel Carvalho', startDate: '2026-04-01', dueDate: '2026-05-31', status: 'todo', percentDone: 0 },
+    { id: 't35', projectId: 'proj-8', name: 'Pilot Market Entry', phase: 'Execute', assignee: 'Maria Santos', startDate: '2026-06-01', dueDate: '2026-08-31', status: 'todo', percentDone: 0 },
+    /* proj-9 */
+    { id: 't36', projectId: 'proj-9', name: 'WC Diagnostic', phase: 'Diagnose', assignee: 'Pedro Sousa', startDate: '2025-06-01', dueDate: '2025-06-30', status: 'completed', percentDone: 100 },
+    { id: 't37', projectId: 'proj-9', name: 'AR Acceleration Plan', phase: 'Design', assignee: 'Pedro Sousa', startDate: '2025-07-01', dueDate: '2025-07-31', status: 'completed', percentDone: 100 },
+    { id: 't38', projectId: 'proj-9', name: 'Implementation', phase: 'Execute', assignee: 'Ricardo Ferreira', startDate: '2025-08-01', dueDate: '2025-11-30', status: 'completed', percentDone: 100 },
+    { id: 't39', projectId: 'proj-9', name: 'Results Measurement', phase: 'Deliver', assignee: 'Pedro Sousa', startDate: '2025-12-01', dueDate: '2025-12-31', status: 'completed', percentDone: 100 },
+    /* proj-10 */
+    { id: 't40', projectId: 'proj-10', name: 'OEE Baseline Assessment', phase: 'Diagnose', assignee: 'Catarina Lima', startDate: '2026-04-01', dueDate: '2026-04-30', status: 'in-progress', percentDone: 60 },
+    { id: 't41', projectId: 'proj-10', name: 'Maintenance Strategy Design', phase: 'Design', assignee: 'Alexandre Costa', startDate: '2026-05-01', dueDate: '2026-06-30', status: 'todo', percentDone: 0 },
+    { id: 't42', projectId: 'proj-10', name: 'HSE Framework Implementation', phase: 'Execute', assignee: 'Catarina Lima', startDate: '2026-07-01', dueDate: '2026-10-31', status: 'todo', percentDone: 0 },
   ],
   actionItems: [
     { id: 'a1',  projectId: 'proj-1', scope: 'Commercial',       description: 'Finalise contractor renegotiation terms with primary drilling contractor', details: 'Three contractors in scope. Apex Drilling is priority.', owner: 'Alexandre Costa', startDate: '2026-04-01', dueDate: '2026-04-30', priority: 'high',     status: 'in-progress', operationalImpact: 'Cost reduction of ~8% on drilling line', comments: 'Draft terms circulated, awaiting client sign-off' },
@@ -143,6 +226,11 @@ const SEED = {
     { id: 'a8',  projectId: 'proj-3', scope: 'Governance',       description: 'Obtain client approval on governance framework document',               owner: 'Alexandre Costa', startDate: '2026-04-01', dueDate: '2026-04-15', priority: 'critical',  status: 'open',        operationalImpact: 'Project unblocked once approved',        comments: 'Project on hold pending this approval' },
     { id: 'a9',  projectId: 'proj-3', scope: 'Risk Management',  description: 'Complete risk register for Phase 2',                                    owner: 'Ricardo Ferreira', startDate: '2026-03-15', dueDate: '2026-03-31', priority: 'high',     status: 'in-progress', operationalImpact: 'Required for contractor mobilisation',   comments: '' },
     { id: 'a10', projectId: 'proj-3', scope: 'Mobilisation',     description: 'Schedule kick-off meeting with main contractor',                        owner: 'Alexandre Costa', startDate: '2026-04-20', dueDate: '2026-04-30', priority: 'medium',   status: 'open',        operationalImpact: 'Contractor on-site readiness',           comments: '' },
+    { id: 'a11', projectId: 'proj-5', scope: 'Technology',    description: 'Finalise ERP vendor selection', owner: 'Maria Santos',    startDate: '2026-04-15', dueDate: '2026-05-01', priority: 'critical', status: 'in-progress', operationalImpact: 'Blocks migration planning', comments: 'Three vendors shortlisted' },
+    { id: 'a12', projectId: 'proj-5', scope: 'Governance',    description: 'Obtain steering committee sign-off on architecture', owner: 'João Ferreira', startDate: '2026-04-20', dueDate: '2026-05-10', priority: 'high', status: 'open', operationalImpact: 'Required before Execute phase', comments: '' },
+    { id: 'a13', projectId: 'proj-6', scope: 'HR',            description: 'Validate new grading structure with legal counsel', owner: 'Ana Rodrigues',  startDate: '2026-03-15', dueDate: '2026-03-31', priority: 'high', status: 'in-progress', operationalImpact: 'Compliance risk if delayed', comments: 'Legal review scheduled' },
+    { id: 'a14', projectId: 'proj-8', scope: 'Regulatory',    description: 'File incorporation documents in Kenya', owner: 'Miguel Carvalho', startDate: '2026-03-20', dueDate: '2026-04-15', priority: 'critical', status: 'open', operationalImpact: 'Pilot launch blocked', comments: 'Local counsel engaged' },
+    { id: 'a15', projectId: 'proj-10', scope: 'HSE',          description: 'Complete gap assessment against ISO 45001', owner: 'Catarina Lima',  startDate: '2026-04-10', dueDate: '2026-04-30', priority: 'high', status: 'in-progress', operationalImpact: 'Phase 2 design input', comments: 'Assessment 60% complete' },
   ],
   budgetItems: [
     /* proj-1 */
@@ -164,10 +252,37 @@ const SEED = {
     { id: 'b14', projectId: 'proj-3', category: 'Materials',             wbs: 'CC-005 · Site Materials',        planned: 15000,  actual: 3000,  notes: '' },
     { id: 'b15', projectId: 'proj-3', category: 'Contingency',           wbs: 'CC-006 · Reserve',               planned: 15000,  actual: 2000,  notes: '' },
     /* proj-4 */
-    { id: 'b16', projectId: 'proj-4', category: 'Personnel',             wbs: 'WBS-001 · Consulting Fees',      planned: 120000, actual: 118000, notes: 'A10 team fees' },
-    { id: 'b17', projectId: 'proj-4', category: 'Travel & Accommodation',wbs: 'CC-002 · Travel',                planned: 18000,  actual: 16500,  notes: '' },
-    { id: 'b18', projectId: 'proj-4', category: 'Technology',            wbs: 'WBS-003 · Analytics Tools',      planned: 12000,  actual: 9800,   notes: '' },
-    { id: 'b19', projectId: 'proj-4', category: 'Contingency',           wbs: 'CC-004 · Reserve',               planned: 10000,  actual: 4200,   notes: '' },
+    { id: 'b4a', projectId: 'proj-4', category: 'Personnel',             wbs: 'WBS-001 · Consulting Fees',      planned: 120000, actual: 118000, notes: 'A10 team fees' },
+    { id: 'b4b', projectId: 'proj-4', category: 'Travel & Accommodation',wbs: 'CC-002 · Travel',                planned: 18000,  actual: 16500,  notes: '' },
+    { id: 'b4c', projectId: 'proj-4', category: 'Technology',            wbs: 'WBS-003 · Analytics Tools',      planned: 12000,  actual: 9800,   notes: '' },
+    { id: 'b4d', projectId: 'proj-4', category: 'Contingency',           wbs: 'CC-004 · Reserve',               planned: 10000,  actual: 4200,   notes: '' },
+    /* proj-5 */
+    { id: 'b16', projectId: 'proj-5', category: 'Personnel',          wbs: 'WBS-001 · Consulting Fees', planned: 180000, actual: 45000, notes: 'A10 team fees' },
+    { id: 'b17', projectId: 'proj-5', category: 'Technology',         wbs: 'WBS-002 · Software & Tools', planned: 85000, actual: 20000, notes: 'ERP licences and integration tools' },
+    { id: 'b18', projectId: 'proj-5', category: 'External Services',  wbs: 'WBS-003 · Technical Advisors', planned: 40000, actual: 8000, notes: 'Specialist IT consultants' },
+    { id: 'b19', projectId: 'proj-5', category: 'Contingency',        wbs: 'WBS-004 · Reserve', planned: 15000, actual: 0, notes: '5% reserve' },
+    /* proj-6 */
+    { id: 'b20', projectId: 'proj-6', category: 'Personnel',          wbs: 'WBS-001 · A10 Fees', planned: 100000, actual: 62000, notes: 'Core team fees' },
+    { id: 'b21', projectId: 'proj-6', category: 'External Services',  wbs: 'WBS-002 · HR Research', planned: 25000, actual: 10000, notes: 'Compensation data subscription' },
+    { id: 'b22', projectId: 'proj-6', category: 'Contingency',        wbs: 'WBS-003 · Reserve', planned: 15000, actual: 0, notes: '10% reserve' },
+    /* proj-7 */
+    { id: 'b23', projectId: 'proj-7', category: 'Personnel',          wbs: 'WBS-001 · Consulting Fees', planned: 70000, actual: 0, notes: 'A10 team fees' },
+    { id: 'b24', projectId: 'proj-7', category: 'External Services',  wbs: 'WBS-002 · ESG Specialists', planned: 20000, actual: 0, notes: 'Third-party ESG advisory' },
+    { id: 'b25', projectId: 'proj-7', category: 'Contingency',        wbs: 'WBS-003 · Reserve', planned: 5000, actual: 0, notes: '5% reserve' },
+    /* proj-8 */
+    { id: 'b26', projectId: 'proj-8', category: 'Personnel',          wbs: 'WBS-001 · Consulting Fees', planned: 130000, actual: 55000, notes: 'A10 team fees' },
+    { id: 'b27', projectId: 'proj-8', category: 'Travel & Accommodation', wbs: 'WBS-002 · Travel', planned: 45000, actual: 18000, notes: 'Nairobi, Dar es Salaam, Maputo' },
+    { id: 'b28', projectId: 'proj-8', category: 'External Services',  wbs: 'WBS-003 · Local Partners', planned: 25000, actual: 5000, notes: 'Local legal and regulatory advisors' },
+    { id: 'b29', projectId: 'proj-8', category: 'Contingency',        wbs: 'WBS-004 · Reserve', planned: 10000, actual: 0, notes: '5% reserve' },
+    /* proj-9 */
+    { id: 'b30', projectId: 'proj-9', category: 'Personnel',          wbs: 'WBS-001 · A10 Fees', planned: 110000, actual: 110000, notes: 'Core team fees — completed' },
+    { id: 'b31', projectId: 'proj-9', category: 'External Services',  wbs: 'WBS-002 · Advisors', planned: 15000, actual: 12000, notes: 'Specialist advisory' },
+    { id: 'b32', projectId: 'proj-9', category: 'Contingency',        wbs: 'WBS-003 · Reserve', planned: 5000, actual: 0, notes: 'Unused reserve' },
+    /* proj-10 */
+    { id: 'b33', projectId: 'proj-10', category: 'Personnel',         wbs: 'WBS-001 · Consulting Fees', planned: 280000, actual: 35000, notes: 'A10 team fees' },
+    { id: 'b34', projectId: 'proj-10', category: 'External Services', wbs: 'WBS-002 · Technical Specialists', planned: 120000, actual: 10000, notes: 'Maintenance and process engineers' },
+    { id: 'b35', projectId: 'proj-10', category: 'Travel & Accommodation', wbs: 'WBS-003 · Site Travel', planned: 50000, actual: 8000, notes: 'On-site presence budget' },
+    { id: 'b36', projectId: 'proj-10', category: 'Contingency',       wbs: 'WBS-004 · Reserve', planned: 30000, actual: 0, notes: '6% reserve' },
   ],
   purchaseOrders: [
     { id: 'po-1', budgetItemId: 'b1', projectId: 'proj-1', poNumber: 'PO-2026-001', description: 'A10 Consulting Services – Phase 1 & 2', vendor: 'A10 Consulting', status: 'issued', amount: 80000, raisedDate: '2026-01-10', issuedDate: '2026-01-15', notes: '' },
@@ -487,6 +602,29 @@ function fmtC(amount, currency) {
 function fmtUSD(n) { return fmtC(n, 'USD'); }
 
 function projCurrency(proj) { return proj?.primaryCurrency || 'EUR'; }
+
+async function fetchExchangeRates() {
+  try {
+    const cs = DB.currencySettings();
+    if (cs.ratesDate) {
+      const ageMs = Date.now() - new Date(cs.ratesDate).getTime();
+      if (ageMs < 23 * 3600 * 1000) return; // fresh enough
+    }
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    if (!res.ok) return;
+    const json = await res.json();
+    if (json.result !== 'success') return;
+    const apiRates = json.rates; // "units of currency per 1 USD"
+    const rates = { USD: 1 };
+    for (const c of ['EUR', 'AUD', 'CAD', 'XAF']) {
+      if (apiRates[c]) rates[c] = 1 / apiRates[c]; // convert to "USD per 1 unit"
+    }
+    DB.saveCurrencySettings({ rates, ratesDate: new Date().toISOString().slice(0, 10) });
+    UI.toast('Exchange rates updated.', 'success');
+  } catch (e) {
+    // silently ignore network errors
+  }
+}
 
 function fmtDate(str) {
   if (!str) return '—';
@@ -1429,10 +1567,10 @@ const ProjectView = {
       <div style="margin-top:16px">
         <table class="data-table">
           <thead>
-            <tr><th>Task</th><th>Phase</th><th>Assignee</th><th>Start</th><th>End</th><th>Status</th><th>%</th><th></th></tr>
+            <tr><th>Task</th><th>Phase</th><th>Assignee</th><th>Start</th><th>End</th><th>Status</th><th>%</th></tr>
           </thead>
           <tbody>
-            ${tasks.map(t => `<tr>
+            ${tasks.map(t => `<tr data-row-edit="${t.id}" style="cursor:pointer">
               <td style="font-weight:700">${t.name}</td>
               <td><span style="font-size:11px;color:var(--accent);font-weight:900;letter-spacing:.8px;text-transform:uppercase">${t.phase}</span></td>
               <td style="font-size:12px">${t.assignee}</td>
@@ -1440,12 +1578,6 @@ const ProjectView = {
               <td style="font-size:12px;color:var(--mid)">${fmtDate(t.dueDate)}</td>
               <td>${taskStatusBadge(t.status)}</td>
               <td style="font-weight:700">${t.percentDone}%</td>
-              <td>
-                <div class="actions-cell">
-                  <button class="btn btn-secondary btn-sm" data-edit-task="${t.id}">Edit</button>
-                  <button class="btn btn-danger btn-sm" data-delete-task="${t.id}">✕</button>
-                </div>
-              </td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -1453,19 +1585,7 @@ const ProjectView = {
     `;
 
     document.getElementById('btn-add-task')?.addEventListener('click', () => TaskModal.open(proj.id, null, () => { this._renderTab(proj.id); }));
-
-    tc.querySelectorAll('[data-edit-task]').forEach(btn => {
-      btn.addEventListener('click', () => TaskModal.open(proj.id, btn.dataset.editTask, () => { this._renderTab(proj.id); }));
-    });
-
-    tc.querySelectorAll('[data-delete-task]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (!UI.confirm('Delete this task?')) return;
-        DB.saveTasks(DB.tasks().filter(t => t.id !== btn.dataset.deleteTask));
-        this._renderTab(proj.id);
-        UI.toast('Task deleted.', 'default');
-      });
-    });
+    tc.querySelectorAll('tr[data-row-edit]').forEach(tr => tr.addEventListener('click', () => TaskModal.open(proj.id, tr.dataset.rowEdit, () => this._renderTab(proj.id))));
   },
 
   _buildGantt(tasks, proj) {
@@ -1550,6 +1670,8 @@ const ProjectView = {
   _renderActionPlan(proj, tc) {
     let filterStatus = 'all';
     let filterPriority = 'all';
+    let sortCol = null;
+    let sortDir = 1;
 
     function daysCounter(a) {
       if (a.status === 'done') return '<span style="color:#16a34a;font-weight:700">✓</span>';
@@ -1566,6 +1688,13 @@ const ProjectView = {
       if (filterStatus !== 'all')   list = list.filter(a => a.status === filterStatus);
       if (filterPriority !== 'all') list = list.filter(a => a.priority === filterPriority);
       const overdueCount = list.filter(a => a.status !== 'done' && isOverdue(a.dueDate)).length;
+
+      const sortIcon = (col) => sortCol === col ? (sortDir > 0 ? ' ↑' : ' ↓') : '';
+      const sorted = sortCol ? [...list].sort((a, b) => {
+        let va = String(a[sortCol] || '').toLowerCase();
+        let vb = String(b[sortCol] || '').toLowerCase();
+        return va < vb ? -sortDir : va > vb ? sortDir : 0;
+      }) : list;
 
       tc.innerHTML = `
         <div class="action-controls">
@@ -1589,14 +1718,14 @@ const ProjectView = {
             <table class="data-table action-plan-table">
               <thead>
                 <tr>
-                  <th style="min-width:100px">Scope</th>
-                  <th style="min-width:200px">Action / Description</th>
+                  <th style="cursor:pointer;user-select:none;min-width:100px" data-sort="scope">Scope${sortIcon('scope')}</th>
+                  <th style="cursor:pointer;user-select:none;min-width:200px" data-sort="description">Action / Description${sortIcon('description')}</th>
                   <th style="min-width:180px">Details / Context</th>
-                  <th style="min-width:130px">Owner</th>
-                  <th style="min-width:80px">Priority</th>
-                  <th style="min-width:100px">Status</th>
+                  <th style="cursor:pointer;user-select:none;min-width:130px" data-sort="owner">Owner${sortIcon('owner')}</th>
+                  <th style="cursor:pointer;user-select:none;min-width:80px" data-sort="priority">Priority${sortIcon('priority')}</th>
+                  <th style="cursor:pointer;user-select:none;min-width:100px" data-sort="status">Status${sortIcon('status')}</th>
                   <th style="min-width:90px">Start Date</th>
-                  <th style="min-width:90px">Due Date</th>
+                  <th style="cursor:pointer;user-select:none;min-width:90px" data-sort="dueDate">Due Date${sortIcon('dueDate')}</th>
                   <th style="min-width:80px">Days</th>
                   <th style="min-width:180px">Operational Impact</th>
                   <th style="min-width:180px">Comments / Next Step</th>
@@ -1604,9 +1733,9 @@ const ProjectView = {
                 </tr>
               </thead>
               <tbody>
-                ${list.map(a => {
+                ${sorted.map(a => {
                   const overdue = a.status !== 'done' && isOverdue(a.dueDate);
-                  return `<tr ${overdue ? 'style="background:#fff5f5"' : ''}>
+                  return `<tr data-row-edit="${a.id}" style="cursor:pointer${overdue ? ';background:#fff5f5' : ''}">
                     <td style="font-size:12px;font-weight:700;white-space:nowrap">${a.scope || '—'}</td>
                     <td style="font-weight:600;max-width:200px">${a.description}</td>
                     <td style="font-size:12px;color:var(--mid);max-width:180px">${a.details || '—'}</td>
@@ -1618,12 +1747,7 @@ const ProjectView = {
                     <td style="text-align:center">${daysCounter(a)}</td>
                     <td style="font-size:12px;color:var(--mid);max-width:180px">${a.operationalImpact || '—'}</td>
                     <td style="font-size:12px;color:var(--mid);max-width:180px">${a.comments || a.notes || '—'}</td>
-                    <td>
-                      <div class="actions-cell">
-                        <button class="btn btn-secondary btn-sm" data-edit-action="${a.id}">Edit</button>
-                        <button class="btn btn-danger btn-sm" data-delete-action="${a.id}">✕</button>
-                      </div>
-                    </td>
+                    <td></td>
                   </tr>`;
                 }).join('')}
               </tbody>
@@ -1637,13 +1761,15 @@ const ProjectView = {
       });
       document.getElementById('filter-priority')?.addEventListener('change', e => { filterPriority = e.target.value; render(); });
       document.getElementById('btn-add-action')?.addEventListener('click', () => ActionModal.open(proj.id, null, render));
-      tc.querySelectorAll('[data-edit-action]').forEach(btn => btn.addEventListener('click', () => ActionModal.open(proj.id, btn.dataset.editAction, render)));
-      tc.querySelectorAll('[data-delete-action]').forEach(btn => btn.addEventListener('click', () => {
-        if (!UI.confirm('Delete this action?')) return;
-        DB.saveActionItems(DB.actionItems().filter(a => a.id !== btn.dataset.deleteAction));
-        UI.toast('Action deleted.', 'default');
-        render();
-      }));
+      tc.querySelectorAll('th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+          const col = th.dataset.sort;
+          if (sortCol === col) sortDir *= -1;
+          else { sortCol = col; sortDir = 1; }
+          render();
+        });
+      });
+      tc.querySelectorAll('tr[data-row-edit]').forEach(tr => tr.addEventListener('click', () => ActionModal.open(proj.id, tr.dataset.rowEdit, render)));
     };
 
     render();
@@ -2066,11 +2192,10 @@ const ProjectView = {
                   <th style="min-width:130px">Owner</th>
                   <th style="min-width:220px">Mitigation</th>
                   <th style="min-width:90px">Status</th>
-                  <th style="min-width:80px"></th>
                 </tr>
               </thead>
               <tbody>
-                ${risks.map(r => `<tr>
+                ${risks.map(r => `<tr data-row-edit="${r.id}" style="cursor:pointer">
                   <td style="font-weight:600;max-width:220px">${r.description}</td>
                   <td style="font-size:12px;color:var(--mid)">${r.category}</td>
                   <td>${priorityBadge(r.probability)}</td>
@@ -2079,12 +2204,6 @@ const ProjectView = {
                   <td style="font-size:12px;white-space:nowrap">${r.owner}</td>
                   <td style="font-size:12px;color:var(--mid);max-width:220px">${r.mitigation || '—'}</td>
                   <td>${actionStatusBadge(r.status)}</td>
-                  <td>
-                    <div class="actions-cell">
-                      <button class="btn btn-secondary btn-sm" data-edit-risk="${r.id}">Edit</button>
-                      <button class="btn btn-danger btn-sm" data-delete-risk="${r.id}">✕</button>
-                    </div>
-                  </td>
                 </tr>`).join('')}
               </tbody>
             </table>
@@ -2093,13 +2212,7 @@ const ProjectView = {
       `;
 
       document.getElementById('btn-add-risk')?.addEventListener('click', () => RiskModal.open(proj.id, null, refresh));
-      tc.querySelectorAll('[data-edit-risk]').forEach(btn => btn.addEventListener('click', () => RiskModal.open(proj.id, btn.dataset.editRisk, refresh)));
-      tc.querySelectorAll('[data-delete-risk]').forEach(btn => btn.addEventListener('click', () => {
-        if (!UI.confirm('Delete this risk?')) return;
-        DB.saveRisks(DB.risks().filter(r => r.id !== btn.dataset.deleteRisk));
-        UI.toast('Risk deleted.', 'default');
-        refresh();
-      }));
+      tc.querySelectorAll('tr[data-row-edit]').forEach(tr => tr.addEventListener('click', () => RiskModal.open(proj.id, tr.dataset.rowEdit, refresh)));
     };
 
     render();
@@ -2141,7 +2254,7 @@ const ProjectModal = {
             </select>
           </div>
           <div class="form-field">
-            <label>Budget (€)</label>
+            <label>Budget (<span id="proj-budget-cur-label">${proj?.primaryCurrency||'EUR'}</span>)</label>
             <input name="budget" type="number" min="0" value="${proj?.budget || ''}">
           </div>
         </div>
@@ -2200,6 +2313,10 @@ const ProjectModal = {
         const cb = label.querySelector('input[type=checkbox]');
         label.classList.toggle('is-checked', cb.checked);
       });
+    });
+    document.querySelector('[name=primaryCurrency]').addEventListener('change', e => {
+      const el = document.getElementById('proj-budget-cur-label');
+      if (el) el.textContent = e.target.value;
     });
     document.getElementById('form-project').addEventListener('submit', e => {
       e.preventDefault();
@@ -2274,15 +2391,25 @@ const TaskModal = {
             <input name="percentDone" type="number" min="0" max="100" value="${task?.percentDone ?? 0}">
           </div>
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
-          <button type="button" class="btn btn-secondary" id="task-cancel">Cancel</button>
-          <button type="submit" class="btn btn-primary">${task ? 'Save' : 'Add'}</button>
+        <div class="modal-footer-row">
+          <div>${task ? '<button type="button" class="btn btn-danger" id="task-delete">Delete</button>' : ''}</div>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn btn-secondary" id="task-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary">${task ? 'Save' : 'Add'}</button>
+          </div>
         </div>
       </form>
     `;
 
     UI.openModal(task ? 'Edit Task' : 'New Task', body);
     document.getElementById('task-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('task-delete')?.addEventListener('click', () => {
+      if (!UI.confirm('Delete this task?')) return;
+      DB.saveTasks(DB.tasks().filter(t => t.id !== taskId));
+      UI.closeModal();
+      UI.toast('Task deleted.', 'default');
+      onSave?.();
+    });
     document.getElementById('form-task').addEventListener('submit', e => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -2366,15 +2493,25 @@ const ActionModal = {
           <label>Comments / Next Step</label>
           <textarea name="comments" rows="2">${action?.comments || action?.notes || ''}</textarea>
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
-          <button type="button" class="btn btn-secondary" id="action-cancel">Cancel</button>
-          <button type="submit" class="btn btn-primary">${action ? 'Save' : 'Add'}</button>
+        <div class="modal-footer-row">
+          <div>${action ? '<button type="button" class="btn btn-danger" id="action-delete">Delete</button>' : ''}</div>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn btn-secondary" id="action-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary">${action ? 'Save' : 'Add'}</button>
+          </div>
         </div>
       </form>
     `;
 
     UI.openModal(action ? 'Edit Action' : 'New Action', body, true);
     document.getElementById('action-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('action-delete')?.addEventListener('click', () => {
+      if (!UI.confirm('Delete this action?')) return;
+      DB.saveActionItems(DB.actionItems().filter(a => a.id !== actionId));
+      UI.closeModal();
+      UI.toast('Action deleted.', 'default');
+      onSave?.();
+    });
     document.getElementById('form-action').addEventListener('submit', e => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -2450,15 +2587,25 @@ const RiskModal = {
           <label>Mitigation</label>
           <textarea name="mitigation" rows="2">${risk?.mitigation || ''}</textarea>
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
-          <button type="button" class="btn btn-secondary" id="risk-cancel">Cancel</button>
-          <button type="submit" class="btn btn-primary">${risk ? 'Save' : 'Add Risk'}</button>
+        <div class="modal-footer-row">
+          <div>${risk ? '<button type="button" class="btn btn-danger" id="risk-delete">Delete</button>' : ''}</div>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn btn-secondary" id="risk-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary">${risk ? 'Save' : 'Add Risk'}</button>
+          </div>
         </div>
       </form>
     `;
 
     UI.openModal(risk ? 'Edit Risk' : 'New Risk', body, true);
     document.getElementById('risk-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('risk-delete')?.addEventListener('click', () => {
+      if (!UI.confirm('Delete this risk?')) return;
+      DB.saveRisks(DB.risks().filter(r => r.id !== riskId));
+      UI.closeModal();
+      UI.toast('Risk deleted.', 'default');
+      onSave?.();
+    });
     document.getElementById('form-risk').addEventListener('submit', e => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -2508,13 +2655,27 @@ const BudgetModal = {
             <input name="notes" value="${item?.notes || ''}">
           </div>
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
-          <button type="button" class="btn btn-secondary" id="budget-cancel">Cancel</button>
-          <button type="submit" class="btn btn-primary">${item ? 'Save' : 'Add'}</button>
+        <div class="modal-footer-row">
+          <div>${item ? '<button type="button" class="btn btn-danger" id="budget-delete">Delete</button>' : ''}</div>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn btn-secondary" id="budget-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary">${item ? 'Save' : 'Add'}</button>
+          </div>
         </div>
       </form>
     `);
     document.getElementById('budget-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('budget-delete')?.addEventListener('click', () => {
+      if (!UI.confirm('Delete this budget line and all its POs and invoices?')) return;
+      const bPOs = DB.purchaseOrders().filter(po => po.budgetItemId === budgetId);
+      const poIds = bPOs.map(po => po.id);
+      DB.saveBudgetItems(DB.budgetItems().filter(b => b.id !== budgetId));
+      DB.savePurchaseOrders(DB.purchaseOrders().filter(po => po.budgetItemId !== budgetId));
+      DB.saveInvoices(DB.invoices().filter(inv => !poIds.includes(inv.poId)));
+      UI.closeModal();
+      UI.toast('Budget line deleted.', 'default');
+      onSave?.();
+    });
     document.getElementById('form-budget').addEventListener('submit', e => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -2587,13 +2748,24 @@ const POModal = {
           <label>Notes</label>
           <input name="notes" value="${po?.notes || ''}">
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
-          <button type="button" class="btn btn-secondary" id="po-cancel">Cancel</button>
-          <button type="submit" class="btn btn-primary">${po ? 'Save' : 'Add PO'}</button>
+        <div class="modal-footer-row">
+          <div>${po ? '<button type="button" class="btn btn-danger" id="po-delete">Delete</button>' : ''}</div>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn btn-secondary" id="po-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary">${po ? 'Save' : 'Add PO'}</button>
+          </div>
         </div>
       </form>
     `, true);
     document.getElementById('po-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('po-delete')?.addEventListener('click', () => {
+      if (!UI.confirm('Delete this PO and all its invoices?')) return;
+      DB.savePurchaseOrders(DB.purchaseOrders().filter(p => p.id !== poId));
+      DB.saveInvoices(DB.invoices().filter(inv => inv.poId !== poId));
+      UI.closeModal();
+      UI.toast('PO deleted.', 'default');
+      onSave?.();
+    });
     document.getElementById('form-po').addEventListener('submit', e => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -2666,13 +2838,23 @@ const InvoiceModal = {
           <label>Notes</label>
           <input name="notes" value="${inv?.notes || ''}">
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
-          <button type="button" class="btn btn-secondary" id="invoice-cancel">Cancel</button>
-          <button type="submit" class="btn btn-primary">${inv ? 'Save' : 'Add Invoice'}</button>
+        <div class="modal-footer-row">
+          <div>${inv ? '<button type="button" class="btn btn-danger" id="invoice-delete">Delete</button>' : ''}</div>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn btn-secondary" id="invoice-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary">${inv ? 'Save' : 'Add Invoice'}</button>
+          </div>
         </div>
       </form>
     `, true);
     document.getElementById('invoice-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('invoice-delete')?.addEventListener('click', () => {
+      if (!UI.confirm('Delete this invoice?')) return;
+      DB.saveInvoices(DB.invoices().filter(i => i.id !== invoiceId));
+      UI.closeModal();
+      UI.toast('Invoice deleted.', 'default');
+      onSave?.();
+    });
     document.getElementById('form-invoice').addEventListener('submit', e => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -2933,13 +3115,23 @@ const ClientsView = {
           <div class="form-field"><label>Payment Terms</label><input name="paymentTerms" value="${c?.paymentTerms || ''}" placeholder="e.g. 30 days net"></div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
-          <button type="button" class="btn btn-secondary" id="modal-cancel">Cancel</button>
-          <button type="submit" class="btn btn-primary">${c ? 'Save Changes' : 'Add Client'}</button>
+        <div class="modal-footer-row">
+          <div>${c ? '<button type="button" class="btn btn-danger" id="client-delete">Delete</button>' : ''}</div>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn btn-secondary" id="modal-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary">${c ? 'Save Changes' : 'Add Client'}</button>
+          </div>
         </div>
       </form>
     `, true);
     document.getElementById('modal-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('client-delete')?.addEventListener('click', () => {
+      if (!UI.confirm('Delete this client?')) return;
+      DB.saveClients(DB.clients().filter(x => x.id !== clientId));
+      UI.closeModal();
+      UI.toast('Client deleted.', 'default');
+      this.render();
+    });
     document.getElementById('form-client').addEventListener('submit', e => {
       e.preventDefault();
       const data = Object.fromEntries(new FormData(e.target));
@@ -3011,13 +3203,23 @@ const SuppliersView = {
           <div class="form-field"><label>Country</label><input name="country" value="${s?.country || ''}"></div>
         </div>
         <div class="form-field"><label>Notes</label><textarea name="notes" rows="2">${s?.notes || ''}</textarea></div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
-          <button type="button" class="btn btn-secondary" id="modal-cancel">Cancel</button>
-          <button type="submit" class="btn btn-primary">${s ? 'Save Changes' : 'Add Supplier'}</button>
+        <div class="modal-footer-row">
+          <div>${s ? '<button type="button" class="btn btn-danger" id="supplier-delete">Delete</button>' : ''}</div>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn btn-secondary" id="modal-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary">${s ? 'Save Changes' : 'Add Supplier'}</button>
+          </div>
         </div>
       </form>
     `);
     document.getElementById('modal-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('supplier-delete')?.addEventListener('click', () => {
+      if (!UI.confirm('Delete this supplier?')) return;
+      DB.saveSuppliers(DB.suppliers().filter(x => x.id !== supplierId));
+      UI.closeModal();
+      UI.toast('Supplier deleted.', 'default');
+      this.render();
+    });
     document.getElementById('form-supplier').addEventListener('submit', e => {
       e.preventDefault();
       const data = Object.fromEntries(new FormData(e.target));
@@ -3153,9 +3355,12 @@ const UsersView = {
           </select>
         </div>
         ${pwdFields}
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
-          <button type="button" class="btn btn-secondary" id="user-cancel">Cancel</button>
-          <button type="submit" class="btn btn-primary">${user ? 'Save Changes' : 'Create User'}</button>
+        <div class="modal-footer-row">
+          <div>${user && user.email !== Auth.current()?.email ? '<button type="button" class="btn btn-danger" id="user-delete">Delete</button>' : ''}</div>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn btn-secondary" id="user-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary">${user ? 'Save Changes' : 'Create User'}</button>
+          </div>
         </div>
       </form>
     `);
@@ -3169,6 +3374,13 @@ const UsersView = {
     });
 
     document.getElementById('user-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('user-delete')?.addEventListener('click', () => {
+      if (!UI.confirm('Delete this user?')) return;
+      DB.saveUsers(DB.users().filter(u => String(u.id) !== String(userId)));
+      UI.closeModal();
+      UI.toast('User deleted.', 'default');
+      UsersView.render();
+    });
     document.getElementById('form-user').addEventListener('submit', e => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -3922,12 +4134,15 @@ const AdminView = {
 
     document.getElementById('main-content').innerHTML = `
       <div class="section-card" style="max-width:680px">
-        <div class="section-card-header"><h3>Exchange Rates</h3></div>
+        <div class="section-card-header">
+          <h3>Exchange Rates</h3>
+          <button class="btn btn-secondary btn-sm" id="btn-refresh-rates">↻ Refresh Now</button>
+        </div>
         <div class="section-card-body">
           <p style="font-size:13px;color:var(--mid);margin-bottom:16px">
             Rates are stored as value in USD for 1 unit of each currency.
             Update daily with previous close rates.<br>
-            ${cs.ratesDate ? `<strong>Last updated:</strong> ${cs.ratesDate}` : '<span style="color:#d97706">⚠ Rates not yet updated — using default estimates.</span>'}
+            ${cs.ratesDate ? `<strong>Last fetched:</strong> ${cs.ratesDate}` : '<span style="color:#d97706">⚠ Rates not yet updated — using default estimates.</span>'}
           </p>
           <form id="form-rates">
             <table class="data-table" style="margin-bottom:16px">
@@ -3961,6 +4176,10 @@ const AdminView = {
         </div>
       </div>
     `;
+
+    document.getElementById('btn-refresh-rates')?.addEventListener('click', () => {
+      fetchExchangeRates().then(() => AdminView.render());
+    });
 
     document.getElementById('form-rates').addEventListener('submit', e => {
       e.preventDefault();
@@ -4014,6 +4233,41 @@ const AdminView = {
     DB.saveProjects(projs);
     DB.set('seeded_v4', true);
   }
+  /* One-time migration: add new users (4-10) and new projects (proj-5 through proj-10) */
+  if (!DB.get('seeded_v5')) {
+    const newUsers = USERS.filter(u => u.id >= 4);
+    const existingUsers = DB.users();
+    const mergedUsers = [...existingUsers];
+    newUsers.forEach(u => { if (!mergedUsers.find(x => x.id === u.id)) mergedUsers.push(u); });
+    DB.saveUsers(mergedUsers);
+
+    const newProjects = SEED.projects.filter(p => ['proj-5','proj-6','proj-7','proj-8','proj-9','proj-10'].includes(p.id));
+    const existingProjects = DB.projects();
+    const mergedProjects = [...existingProjects];
+    newProjects.forEach(p => { if (!mergedProjects.find(x => x.id === p.id)) mergedProjects.push(p); });
+    DB.saveProjects(mergedProjects);
+
+    const newTasks = SEED.tasks.filter(t => ['proj-5','proj-6','proj-7','proj-8','proj-9','proj-10'].includes(t.projectId));
+    const existingTasks = DB.tasks();
+    const mergedTasks = [...existingTasks];
+    newTasks.forEach(t => { if (!mergedTasks.find(x => x.id === t.id)) mergedTasks.push(t); });
+    DB.saveTasks(mergedTasks);
+
+    const newBudgetItems = SEED.budgetItems.filter(b => ['proj-5','proj-6','proj-7','proj-8','proj-9','proj-10'].includes(b.projectId));
+    const existingBudget = DB.budgetItems();
+    const mergedBudget = [...existingBudget];
+    newBudgetItems.forEach(b => { if (!mergedBudget.find(x => x.id === b.id)) mergedBudget.push(b); });
+    DB.saveBudgetItems(mergedBudget);
+
+    const newActions = SEED.actionItems.filter(a => ['proj-5','proj-6','proj-7','proj-8','proj-9','proj-10'].includes(a.projectId));
+    const existingActions = DB.actionItems();
+    const mergedActions = [...existingActions];
+    newActions.forEach(a => { if (!mergedActions.find(x => x.id === a.id)) mergedActions.push(a); });
+    DB.saveActionItems(mergedActions);
+
+    DB.set('seeded_v5', true);
+  }
+  fetchExchangeRates();
   const session = Auth.current();
   if (session) {
     document.getElementById('user-name').textContent = session.name;

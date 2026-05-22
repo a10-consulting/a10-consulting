@@ -1223,6 +1223,8 @@ p { margin: 0 0 .5em; }
   flex-shrink: 0;
 }
 
+.modal-footer-row { display:flex; justify-content:space-between; align-items:center; margin-top:16px; }
+
 /* ── TOAST ────────────────────────────────── */
 .toast {
   position: fixed;
