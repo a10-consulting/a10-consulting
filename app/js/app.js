@@ -1513,38 +1513,88 @@ const ProjectView = {
         </div>
       </div>` : ''}
 
-      ${(() => {
-        const allUsers = DB.users();
-        const memberIds = proj.memberIds || [];
-        const lead = allUsers.find(u => u.name === proj.lead);
-        const members = memberIds.map(id => allUsers.find(u => u.id === id)).filter(Boolean);
-        const team = lead
-          ? [{ ...lead, isLead: true }, ...members.filter(u => u.id !== lead.id)]
-          : members;
-        if (!team.length) return '';
-        const tasks = DB.tasks().filter(t => t.projectId === proj.id);
-        return `
-        <div class="section-card">
-          <div class="section-card-header"><h3>Team (${team.length})</h3></div>
-          <div class="section-card-body">
-            <div class="team-cards">
-              ${team.map(u => {
-                const assigned = tasks.filter(t => t.assignee === u.name);
-                const done = assigned.filter(t => t.status === 'completed').length;
-                return `<div class="team-member-card">
-                  <div class="team-member-avatar">${u.avatar || u.name.slice(0,2).toUpperCase()}</div>
-                  <div class="team-member-info">
-                    <div class="team-member-name">${u.name}${u.isLead ? ' <span class="badge badge-active" style="font-size:10px;padding:1px 6px">Lead</span>' : ''}</div>
-                    <div class="team-member-role">${u.role}</div>
-                    <div class="team-member-tasks">${assigned.length} task(s) · ${done} done</div>
-                  </div>
-                </div>`;
-              }).join('')}
-            </div>
+      <div class="section-card" id="team-section">
+        <div class="section-card-header">
+          <h3>Team</h3>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select id="add-member-select" class="search-box" style="width:auto;font-size:13px">
+              <option value="">+ Add member…</option>
+            </select>
           </div>
-        </div>`;
-      })()}
+        </div>
+        <div class="section-card-body">
+          <div class="team-cards" id="team-cards-list"></div>
+        </div>
+      </div>
     `;
+
+    const renderTeam = () => {
+      const allUsers = DB.users();
+      const currentProj = DB.projectById(proj.id);
+      const memberIds = currentProj.memberIds || [];
+      const lead = allUsers.find(u => u.name === currentProj.lead);
+      const members = memberIds.map(id => allUsers.find(u => u.id === id)).filter(Boolean);
+      const team = lead
+        ? [{ ...lead, isLead: true }, ...members.filter(u => u.id !== lead.id)]
+        : members;
+      const tasks = DB.tasks().filter(t => t.projectId === proj.id);
+
+      // Populate add-member dropdown with users not already in team
+      const sel = document.getElementById('add-member-select');
+      if (sel) {
+        const teamIds = team.map(u => u.id);
+        sel.innerHTML = '<option value="">+ Add member…</option>' +
+          allUsers.filter(u => !teamIds.includes(u.id))
+            .map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+      }
+
+      const list = document.getElementById('team-cards-list');
+      if (!list) return;
+      if (!team.length) {
+        list.innerHTML = `<p style="font-size:13px;color:var(--mid)">No team members assigned.</p>`;
+        return;
+      }
+      list.innerHTML = team.map(u => {
+        const assigned = tasks.filter(t => t.assignee === u.name);
+        const done = assigned.filter(t => t.status === 'completed').length;
+        return `<div class="team-member-card">
+          <div class="team-member-avatar">${u.avatar || u.name.slice(0,2).toUpperCase()}</div>
+          <div class="team-member-info" style="flex:1">
+            <div class="team-member-name">${u.name}${u.isLead ? ' <span class="badge badge-active" style="font-size:10px;padding:1px 6px">Lead</span>' : ''}</div>
+            <div class="team-member-role">${u.role}</div>
+            <div class="team-member-tasks">${assigned.length} task(s) · ${done} done</div>
+          </div>
+          ${!u.isLead ? `<button class="btn btn-danger btn-sm" data-remove-member="${u.id}" title="Remove from team" style="flex-shrink:0">✕</button>` : ''}
+        </div>`;
+      }).join('');
+
+      list.querySelectorAll('[data-remove-member]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const uid = Number(btn.dataset.removeMember);
+          const projs = DB.projects();
+          const idx = projs.findIndex(p => p.id === proj.id);
+          projs[idx].memberIds = (projs[idx].memberIds || []).filter(id => id !== uid);
+          DB.saveProjects(projs);
+          renderTeam();
+        });
+      });
+    };
+
+    renderTeam();
+
+    document.getElementById('add-member-select')?.addEventListener('change', e => {
+      const uid = Number(e.target.value);
+      if (!uid) return;
+      const projs = DB.projects();
+      const idx = projs.findIndex(p => p.id === proj.id);
+      const ids = projs[idx].memberIds || [];
+      if (!ids.includes(uid)) {
+        projs[idx].memberIds = [...ids, uid];
+        DB.saveProjects(projs);
+      }
+      e.target.value = '';
+      renderTeam();
+    });
   },
 
   /* ── Tab: Gantt ── */
@@ -1874,7 +1924,7 @@ const ProjectView = {
                     <th style="min-width:110px">Invoiced</th>
                     <th style="min-width:110px">Paid</th>
                     <th style="min-width:110px">Available</th>
-                    <th style="min-width:120px"></th>
+                    <th style="min-width:60px"></th>
                   </tr>
                 </thead>
                 <tbody id="budget-tbody"></tbody>
@@ -1902,7 +1952,7 @@ const ProjectView = {
         const isExp = expandedItems.has(b.id);
         const avColor = s.available < 0 ? '#dc2626' : '#16a34a';
 
-        html += `<tr class="budget-cat-row">
+        html += `<tr class="budget-cat-row" data-edit-budget="${b.id}" style="cursor:pointer" title="Click to edit">
           <td><div style="display:flex;align-items:center;gap:6px">
             <button class="expand-btn" data-expand-item="${b.id}">${isExp ? '▼' : '▶'}</button>
             <strong>${b.category}</strong>
@@ -1913,17 +1963,14 @@ const ProjectView = {
           <td>${f(s.invoiced)}</td>
           <td style="color:#16a34a;font-weight:${s.paid > 0 ? '700' : '400'}">${f(s.paid)}</td>
           <td style="font-weight:700;color:${avColor}">${f(s.available)}</td>
-          <td><div class="actions-cell">
-            <button class="btn btn-secondary btn-sm" data-edit-budget="${b.id}">Edit</button>
-            <button class="btn btn-danger btn-sm" data-delete-budget="${b.id}">✕</button>
-          </div></td>
+          <td></td>
         </tr>`;
 
         if (isExp) {
           s.pos.forEach(po => {
             const ps = poStats(po);
             const isPOExp = expandedPOs.has(po.id);
-            html += `<tr style="background:#f5f8ff">
+            html += `<tr style="background:#f5f8ff;cursor:pointer" data-edit-po="${po.id}" title="Click to edit">
               <td style="padding-left:28px"><div style="display:flex;align-items:center;gap:6px">
                 <button class="expand-btn" data-expand-po="${po.id}">${isPOExp ? '▼' : '▶'}</button>
                 <span style="font-size:12px;font-weight:700;color:var(--accent)">${po.poNumber}</span>
@@ -1934,17 +1981,13 @@ const ProjectView = {
               <td>${f(ps.invoiced)}</td>
               <td style="color:#16a34a;font-weight:${ps.paid > 0 ? '700' : '400'}">${f(ps.paid)}</td>
               <td style="font-size:12px;color:var(--mid)">${f(po.amount - ps.paid)} remaining</td>
-              <td><div class="actions-cell">
-                <button class="btn btn-primary btn-sm" style="font-size:11px;padding:2px 7px" data-add-invoice="${po.id}">+ Invoice</button>
-                <button class="btn btn-secondary btn-sm" data-edit-po="${po.id}">Edit</button>
-                <button class="btn btn-danger btn-sm" data-delete-po="${po.id}">✕</button>
-              </div></td>
+              <td><button class="btn btn-primary btn-sm" style="font-size:11px;padding:2px 7px" data-add-invoice="${po.id}">+ Invoice</button></td>
             </tr>`;
 
             if (isPOExp) {
               if (ps.invs.length) {
                 ps.invs.forEach(inv => {
-                  html += `<tr style="background:#eef2ff">
+                  html += `<tr style="background:#eef2ff;cursor:pointer" data-edit-invoice="${inv.id}" title="Click to edit">
                     <td style="padding-left:52px;font-size:12px">📄 ${inv.invoiceNumber}</td>
                     <td style="font-size:12px">${inv.description}</td>
                     <td>${invoiceStatusBadge(inv.status)}</td>
@@ -1952,10 +1995,7 @@ const ProjectView = {
                     <td style="font-size:12px;color:var(--mid)">${fmtDate(inv.invoiceDate)}</td>
                     <td style="font-size:12px;color:var(--mid)">Due: ${fmtDate(inv.dueDate)}</td>
                     <td style="font-size:12px;color:#16a34a">${inv.status === 'paid' ? '✓ ' + fmtDate(inv.paidDate) : '—'}</td>
-                    <td><div class="actions-cell">
-                      <button class="btn btn-secondary btn-sm" data-edit-invoice="${inv.id}">Edit</button>
-                      <button class="btn btn-danger btn-sm" data-delete-invoice="${inv.id}">✕</button>
-                    </div></td>
+                    <td></td>
                   </tr>`;
                 });
               } else {
@@ -1993,36 +2033,26 @@ const ProjectView = {
         if (expandedPOs.has(id)) expandedPOs.delete(id); else expandedPOs.add(id);
         renderRows();
       }));
-      tbody.querySelectorAll('[data-edit-budget]').forEach(btn => btn.addEventListener('click', () => BudgetModal.open(proj.id, btn.dataset.editBudget, refresh)));
-      tbody.querySelectorAll('[data-delete-budget]').forEach(btn => btn.addEventListener('click', () => {
-        if (!UI.confirm('Delete this budget line and all its POs and invoices?')) return;
-        const bId = btn.dataset.deleteBudget;
-        const bPOs = DB.purchaseOrders().filter(po => po.budgetItemId === bId);
-        const poIds = bPOs.map(po => po.id);
-        DB.saveBudgetItems(DB.budgetItems().filter(b => b.id !== bId));
-        DB.savePurchaseOrders(DB.purchaseOrders().filter(po => po.budgetItemId !== bId));
-        DB.saveInvoices(DB.invoices().filter(inv => !poIds.includes(inv.poId)));
-        UI.toast('Budget line deleted.', 'default');
-        refresh();
+      tbody.querySelectorAll('tr[data-edit-budget]').forEach(tr => tr.addEventListener('click', e => {
+        if (e.target.closest('button')) return;
+        BudgetModal.open(proj.id, tr.dataset.editBudget, refresh);
       }));
       tbody.querySelectorAll('[data-add-po]').forEach(btn => btn.addEventListener('click', () => {
         const bId = btn.dataset.addPo;
         POModal.open(proj.id, bId, null, () => { expandedItems.add(bId); refresh(); });
       }));
-      tbody.querySelectorAll('[data-edit-po]').forEach(btn => btn.addEventListener('click', () => POModal.open(proj.id, null, btn.dataset.editPo, refresh)));
-      tbody.querySelectorAll('[data-delete-po]').forEach(btn => btn.addEventListener('click', () => {
-        if (!UI.confirm('Delete this PO and all its invoices?')) return;
-        const poId = btn.dataset.deletePo;
-        DB.savePurchaseOrders(DB.purchaseOrders().filter(po => po.id !== poId));
-        DB.saveInvoices(DB.invoices().filter(inv => inv.poId !== poId));
-        UI.toast('PO deleted.', 'default');
-        refresh();
+      tbody.querySelectorAll('tr[data-edit-po]').forEach(tr => tr.addEventListener('click', e => {
+        if (e.target.closest('button')) return;
+        POModal.open(proj.id, null, tr.dataset.editPo, refresh);
       }));
       tbody.querySelectorAll('[data-add-invoice]').forEach(btn => btn.addEventListener('click', () => {
         const poId = btn.dataset.addInvoice;
         InvoiceModal.open(proj.id, poId, null, () => { expandedPOs.add(poId); refresh(); });
       }));
-      tbody.querySelectorAll('[data-edit-invoice]').forEach(btn => btn.addEventListener('click', () => InvoiceModal.open(proj.id, null, btn.dataset.editInvoice, refresh)));
+      tbody.querySelectorAll('tr[data-edit-invoice]').forEach(tr => tr.addEventListener('click', e => {
+        if (e.target.closest('button')) return;
+        InvoiceModal.open(proj.id, null, tr.dataset.editInvoice, refresh);
+      }));
       tbody.querySelectorAll('[data-delete-invoice]').forEach(btn => btn.addEventListener('click', () => {
         if (!UI.confirm('Delete this invoice?')) return;
         DB.saveInvoices(DB.invoices().filter(inv => inv.id !== btn.dataset.deleteInvoice));
@@ -2273,17 +2303,6 @@ const ProjectModal = {
             </select>
           </div>
         </div>
-        <div class="form-field">
-          <label>Team Members</label>
-          <div class="team-checkboxes">
-            ${DB.users().map(u => `
-              <label class="team-check${(proj?.memberIds||[]).includes(u.id) ? ' is-checked' : ''}">
-                <input type="checkbox" name="memberIds" value="${u.id}" ${(proj?.memberIds||[]).includes(u.id) ? 'checked' : ''}>
-                <span class="team-check-avatar">${u.avatar || u.name.slice(0,2).toUpperCase()}</span>
-                <span>${u.name}</span>
-              </label>`).join('')}
-          </div>
-        </div>
         <div class="form-row">
           <div class="form-field">
             <label>Start Date</label>
@@ -2308,12 +2327,6 @@ const ProjectModal = {
     UI.openModal(title, body, true);
 
     document.getElementById('modal-cancel').addEventListener('click', UI.closeModal.bind(UI));
-    document.querySelectorAll('.team-check').forEach(label => {
-      label.addEventListener('click', () => {
-        const cb = label.querySelector('input[type=checkbox]');
-        label.classList.toggle('is-checked', cb.checked);
-      });
-    });
     document.querySelector('[name=primaryCurrency]').addEventListener('change', e => {
       const el = document.getElementById('proj-budget-cur-label');
       if (el) el.textContent = e.target.value;
@@ -2324,16 +2337,15 @@ const ProjectModal = {
       const data = Object.fromEntries(fd);
       data.budget = parseFloat(data.budget) || 0;
 
-      const memberIds = Array.from(e.target.querySelectorAll('[name="memberIds"]:checked')).map(cb => Number(cb.value));
       const projects = DB.projects();
       if (proj) {
         const idx = projects.findIndex(p => p.id === proj.id);
-        projects[idx] = { ...proj, ...data, memberIds };
+        projects[idx] = { ...proj, ...data, memberIds: proj.memberIds || [] };
         DB.saveProjects(projects);
         UI.toast('Project updated.', 'success');
         Router.go('project', proj.id);
       } else {
-        const newProj = { ...data, memberIds, id: 'proj-' + DB.uid(), createdAt: new Date().toISOString() };
+        const newProj = { ...data, memberIds: [], id: 'proj-' + DB.uid(), createdAt: new Date().toISOString() };
         DB.saveProjects([...projects, newProj]);
         UI.toast('Project created.', 'success');
         Router.go('project', newProj.id);
@@ -4163,14 +4175,12 @@ const AdminView = {
                   </tr>`).join('')}
               </tbody>
             </table>
-            <div class="form-row" style="align-items:flex-end">
-              <div class="form-field">
+            <div style="display:flex;align-items:flex-end;gap:10px;margin-top:4px">
+              <div class="form-field" style="margin-bottom:0;flex:0 0 auto">
                 <label>Rates Date (previous close)</label>
                 <input name="ratesDate" type="date" value="${cs.ratesDate || ''}" required>
               </div>
-              <div>
-                <button type="submit" class="btn btn-primary">Save Rates</button>
-              </div>
+              <button type="submit" class="btn btn-primary" style="flex-shrink:0">Save Rates</button>
             </div>
           </form>
         </div>
