@@ -816,9 +816,36 @@ const PRINT_STYLES = `
   .print-badge-complete { background:#f3f4f6; color:#374151; }
   .print-progress { height:6px; background:var(--line); border-radius:3px; overflow:hidden; margin-top:4px; }
   .print-progress-bar { height:100%; background:var(--accent); border-radius:3px; }
+  /* Gantt print */
+  .gantt-wrap { overflow:hidden; border:1px solid var(--line); border-radius:8px; }
+  .gantt { min-width:0; }
+  .gantt-header-row { display:flex; background:#f8f9fb; border-bottom:1px solid var(--line); }
+  .gantt-label-col { flex-shrink:0; width:180px; padding:8px 12px; font-size:10px; font-weight:900; letter-spacing:.8px; text-transform:uppercase; color:var(--mid); border-right:1px solid var(--line); }
+  .gantt-timeline-col { flex:1; position:relative; min-height:32px; }
+  .gantt-month-marker { position:absolute; top:0; bottom:0; display:flex; align-items:center; padding-left:5px; font-size:10px; font-weight:700; color:var(--mid); border-left:1px dashed var(--line); white-space:nowrap; overflow:hidden; }
+  .gantt-today-line { position:absolute; top:0; bottom:0; width:2px; background:#ef4444; opacity:.5; z-index:1; }
+  .gantt-phase-row { display:flex; background:#e8eef7; }
+  .gantt-phase-label { width:180px; flex-shrink:0; padding:4px 12px; font-size:9px; font-weight:900; letter-spacing:1px; text-transform:uppercase; color:var(--accent); border-right:1px solid var(--line); }
+  .gantt-phase-track { flex:1; border-bottom:1px solid var(--line); }
+  .gantt-row { display:flex; border-bottom:1px solid var(--line); }
+  .gantt-row:last-child { border-bottom:none; }
+  .gantt-row-label { width:180px; flex-shrink:0; padding:8px 12px; font-size:11px; font-weight:600; color:var(--navy); border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; gap:2px; }
+  .gantt-row-label span { font-size:10px; color:var(--mid); font-weight:400; }
+  .gantt-row-track { flex:1; position:relative; height:40px; background:#fff; }
+  .gantt-bar { position:absolute; top:50%; transform:translateY(-50%); height:20px; border-radius:5px; overflow:hidden; min-width:4px; display:flex; align-items:center; }
+  .gantt-bar-bg { position:absolute; inset:0; opacity:.25; }
+  .gantt-bar-fill { position:absolute; left:0; top:0; bottom:0; border-radius:5px 0 0 5px; }
+  .gantt-bar-text { position:relative; z-index:1; padding:0 6px; font-size:10px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none; }
+  .gantt-bar.status-todo .gantt-bar-bg, .gantt-bar.status-todo .gantt-bar-fill { background:#6b7280; }
+  .gantt-bar.status-in-progress .gantt-bar-bg, .gantt-bar.status-in-progress .gantt-bar-fill { background:#3e6697; }
+  .gantt-bar.status-completed .gantt-bar-bg, .gantt-bar.status-completed .gantt-bar-fill { background:#22c55e; }
+  .gantt-bar.status-blocked .gantt-bar-bg, .gantt-bar.status-blocked .gantt-bar-fill { background:#ef4444; }
+  .gantt-bar.status-todo .gantt-bar-fill { opacity:.55; }
+  .gantt-bar.status-in-progress .gantt-bar-fill, .gantt-bar.status-completed .gantt-bar-fill, .gantt-bar.status-blocked .gantt-bar-fill { opacity:.85; }
+  .gantt-gridline { position:absolute; top:0; bottom:0; width:1px; background:var(--line); }
   @media print {
     body { padding:0; }
-    @page { margin:18mm 14mm; size:A4; }
+    @page { margin:18mm 14mm; size:A4 landscape; }
   }
 `;
 
@@ -1059,7 +1086,7 @@ const ActiveProjectsView = {
       document.getElementById('active-table-wrap').innerHTML = list.length ? `
         <table class="data-table">
           <thead>
-            <tr><th>Project / Client</th><th>Lead</th><th>Completion</th><th>Budget Used</th><th>Deadline</th><th></th></tr>
+            <tr><th>Project / Client</th><th>Lead</th><th>Completion</th><th>Budget Used</th><th>Deadline</th></tr>
           </thead>
           <tbody>
             ${list.map(p => {
@@ -1067,10 +1094,10 @@ const ActiveProjectsView = {
               const planned = DB.projectPlanned(p.id);
               const spent = DB.projectSpent(p.id);
               const budgetPct = planned ? Math.round(spent / planned * 100) : 0;
-              return `<tr>
+              return `<tr data-project="${p.id}" style="cursor:pointer" title="Open project">
                 <td>
                   <div class="project-name-cell">
-                    <span class="project-name-link" data-project="${p.id}">${p.name}</span>
+                    <span class="project-name-link">${p.name}</span>
                     <span class="project-client">${p.client}</span>
                   </div>
                 </td>
@@ -1081,15 +1108,14 @@ const ActiveProjectsView = {
                   <div style="margin-top:4px">${progressBar(budgetPct)}</div>
                 </td>
                 <td style="font-size:12px;color:var(--mid);white-space:nowrap">${fmtDate(p.endDate)}</td>
-                <td><button class="btn btn-secondary btn-sm" data-project="${p.id}">Open</button></td>
               </tr>`;
             }).join('')}
           </tbody>
         </table>
       ` : `<div class="empty-state"><p>No projects match your search.</p></div>`;
 
-      document.getElementById('active-table-wrap').querySelectorAll('[data-project]').forEach(el => {
-        el.addEventListener('click', () => Router.go('project', el.dataset.project));
+      document.getElementById('active-table-wrap').querySelectorAll('tr[data-project]').forEach(tr => {
+        tr.addEventListener('click', () => Router.go('project', tr.dataset.project));
       });
     };
 
@@ -1194,7 +1220,6 @@ const Dashboard = {
             <th>Completion</th>
             <th>Budget</th>
             <th>Deadline</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -1203,10 +1228,10 @@ const Dashboard = {
             const planned = DB.projectPlanned(p.id);
             const spent = DB.projectSpent(p.id);
             const budgetPct = planned ? Math.round(spent / planned * 100) : 0;
-            return `<tr>
+            return `<tr data-project="${p.id}" style="cursor:pointer" title="Open project">
               <td>
                 <div class="project-name-cell">
-                  <span class="project-name-link" data-project="${p.id}">${p.name}</span>
+                  <span class="project-name-link">${p.name}</span>
                   <span class="project-client">${p.client}</span>
                 </div>
               </td>
@@ -1220,12 +1245,6 @@ const Dashboard = {
                 <div style="margin-top:4px">${progressBar(budgetPct)}</div>
               </td>
               <td style="font-size:12px;color:var(--mid);white-space:nowrap">${fmtDate(p.endDate)}</td>
-              <td>
-                <div class="actions-cell">
-                  <button class="btn btn-secondary btn-sm" data-project="${p.id}">View</button>
-                  <button class="btn btn-danger btn-sm" data-delete="${p.id}" title="Delete">✕</button>
-                </div>
-              </td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -1245,20 +1264,8 @@ const Dashboard = {
     document.getElementById('proj-search')?.addEventListener('input', () => this._renderTable(DB.projects()));
 
     document.getElementById('main-content').addEventListener('click', e => {
-      const projectId = e.target.closest('[data-project]')?.dataset.project;
-      const deleteId  = e.target.closest('[data-delete]')?.dataset.delete;
-      if (projectId) Router.go('project', projectId);
-      if (deleteId) {
-        if (!UI.confirm('Delete this project and all its data?')) return;
-        const projects = DB.projects().filter(p => p.id !== deleteId);
-        DB.saveProjects(projects);
-        DB.saveTasks(DB.tasks().filter(t => t.projectId !== deleteId));
-        DB.saveActionItems(DB.actionItems().filter(a => a.projectId !== deleteId));
-        DB.saveBudgetItems(DB.budgetItems().filter(b => b.projectId !== deleteId));
-        DB.saveDocuments(DB.documents().filter(d => d.projectId !== deleteId));
-        UI.toast('Project deleted.', 'default');
-        Dashboard.render();
-      }
+      const tr = e.target.closest('tr[data-project]');
+      if (tr) Router.go('project', tr.dataset.project);
     });
   },
 };
@@ -1365,10 +1372,11 @@ const ProjectView = {
 
     else if (tab === 'gantt') {
       const tasks = DB.tasks().filter(t => t.projectId === proj.id);
-      body = `<div class="print-section"><div class="print-section-title">Task List</div>
-        <table class="print-table"><thead><tr><th>Task</th><th>Phase</th><th>Assignee</th><th>Start</th><th>Due</th><th>Status</th><th>%</th></tr></thead><tbody>
-          ${tasks.map(t=>`<tr><td>${t.name}</td><td>${t.phase||'—'}</td><td>${t.assignee||'—'}</td><td>${fmtDate(t.startDate)}</td><td>${fmtDate(t.dueDate)}</td><td style="text-transform:capitalize">${t.status}</td><td>${t.percentDone||0}%</td></tr>`).join('')}
-        </tbody></table></div>`;
+      const ganttHtml = tasks.length ? this._buildGantt(tasks, proj) : '<p style="color:#6b7280">No tasks.</p>';
+      body = `<div class="print-section">
+        <div class="print-section-title">Gantt Chart</div>
+        ${ganttHtml}
+      </div>`;
     }
 
     else if (tab === 'action-plan') {
@@ -2317,9 +2325,12 @@ const ProjectModal = {
           <label>Description</label>
           <textarea name="description" rows="4">${proj?.description || ''}</textarea>
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
-          <button type="button" class="btn btn-secondary" id="modal-cancel">Cancel</button>
-          <button type="submit" class="btn btn-primary">${proj ? 'Save Changes' : 'Create Project'}</button>
+        <div class="modal-footer-row">
+          <div>${proj ? '<button type="button" class="btn btn-danger" id="proj-delete">Delete Project</button>' : ''}</div>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn btn-secondary" id="modal-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary">${proj ? 'Save Changes' : 'Create Project'}</button>
+          </div>
         </div>
       </form>
     `;
@@ -2327,6 +2338,20 @@ const ProjectModal = {
     UI.openModal(title, body, true);
 
     document.getElementById('modal-cancel').addEventListener('click', UI.closeModal.bind(UI));
+    document.getElementById('proj-delete')?.addEventListener('click', () => {
+      if (!UI.confirm('Delete this project and all its data? This cannot be undone.')) return;
+      const id = proj.id;
+      DB.saveProjects(DB.projects().filter(p => p.id !== id));
+      DB.saveTasks(DB.tasks().filter(t => t.projectId !== id));
+      DB.saveActionItems(DB.actionItems().filter(a => a.projectId !== id));
+      DB.saveBudgetItems(DB.budgetItems().filter(b => b.projectId !== id));
+      DB.saveDocuments(DB.documents().filter(d => d.projectId !== id));
+      DB.savePurchaseOrders(DB.purchaseOrders().filter(po => po.projectId !== id));
+      DB.saveInvoices(DB.invoices().filter(inv => inv.projectId !== id));
+      UI.closeModal();
+      UI.toast('Project deleted.', 'default');
+      Router.go('active-projects');
+    });
     document.querySelector('[name=primaryCurrency]').addEventListener('change', e => {
       const el = document.getElementById('proj-budget-cur-label');
       if (el) el.textContent = e.target.value;
