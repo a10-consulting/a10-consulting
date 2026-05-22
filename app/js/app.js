@@ -21,7 +21,7 @@ const PROJECT_STATUSES = ['draft', 'active', 'on-hold', 'completed'];
 
 const CURRENCIES = ['USD', 'EUR', 'AUD', 'CAD', 'XAF'];
 const CURRENCY_NAMES = { USD: 'US Dollar', EUR: 'Euro', AUD: 'Australian Dollar', CAD: 'Canadian Dollar', XAF: 'CFA Franc' };
-const CURRENCY_SYMBOLS = { USD: '$', EUR: '€', AUD: 'A$', CAD: 'C$', XAF: 'XAF ' };
+const CURRENCY_SYMBOLS = { USD: '$', EUR: '€', AUD: 'A$', CAD: 'C$' };
 const DEFAULT_RATES = { USD: 1, EUR: 1.0823, AUD: 0.6512, CAD: 0.7389, XAF: 0.001650 };
 
 const PRIORITIES = ['low', 'medium', 'high', 'critical'];
@@ -479,8 +479,8 @@ function convertCurrency(amount, from, to) {
 
 function fmtC(amount, currency) {
   const n = amount || 0;
+  if (currency === 'XAF') return Math.round(n).toLocaleString('en-US') + ' XAF';
   const sym = CURRENCY_SYMBOLS[currency] || (currency + ' ');
-  if (currency === 'XAF') return sym + Math.round(n).toLocaleString('en');
   return sym + new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(n));
 }
 
