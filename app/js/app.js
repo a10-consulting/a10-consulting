@@ -473,6 +473,22 @@ const DB = {
     return 'on-track';
   },
 
+  exportAll() {
+    const keys = ['projects','tasks','actionItems','budgetItems','documents',
+                  'clients','suppliers','users','purchaseOrders','invoices',
+                  'risks','a10Invoices','a10Settings','currencySettings'];
+    const data = { exportedAt: new Date().toISOString(), version: 1 };
+    keys.forEach(k => { data[k] = this.get(k); });
+    return data;
+  },
+
+  importAll(data) {
+    const keys = ['projects','tasks','actionItems','budgetItems','documents',
+                  'clients','suppliers','users','purchaseOrders','invoices',
+                  'risks','a10Invoices','a10Settings','currencySettings'];
+    keys.forEach(k => { if (data[k] !== undefined) this.set(k, data[k]); });
+  },
+
   uid() { return Math.random().toString(36).slice(2, 10); },
 
   seed() {
@@ -536,28 +552,36 @@ const UI = {
   },
 
   /* Modal */
+  _lastFocus: null,
+
   openModal(title, bodyHtml, wide = false) {
+    this._lastFocus = document.activeElement;
     document.getElementById('modal-title').textContent = title;
-    document.getElementById('modal-body').innerHTML = bodyHtml;
+    document.getElementById('modal-body').innerHTML = sanitize(bodyHtml);
     document.getElementById('modal-box').className = wide ? 'modal-box modal-wide' : 'modal-box';
     document.getElementById('modal-overlay').classList.remove('hidden');
+    setTimeout(() => {
+      const first = document.querySelector('#modal-body input, #modal-body select, #modal-body textarea, #modal-body button');
+      first?.focus();
+    }, 50);
   },
 
   closeModal() {
     document.getElementById('modal-overlay').classList.add('hidden');
     document.getElementById('modal-body').innerHTML = '';
+    this._lastFocus?.focus();
   },
 
   openDocPreview(title, bodyHtml) {
     document.getElementById('doc-title').textContent = title;
-    document.getElementById('doc-body').innerHTML = bodyHtml;
+    const safe = (typeof sanitize !== 'undefined') ? sanitize(bodyHtml) : bodyHtml;
+    document.getElementById('doc-body').innerHTML = safe;
     document.getElementById('doc-overlay').classList.remove('hidden');
+    const filename = (title || 'document').replace(/[^a-z0-9]/gi, '_').toLowerCase();
     document.getElementById('btn-print-doc').onclick = () => printContent(document.getElementById('doc-body').innerHTML, title);
-    document.getElementById('btn-export-doc').onclick = () => exportHTML(
-      document.getElementById('doc-body').innerHTML,
-      (title || 'document').replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.html',
-      title
-    );
+    document.getElementById('btn-export-doc').onclick = () => exportHTML(document.getElementById('doc-body').innerHTML, filename + '.html', title);
+    const pdfBtn = document.getElementById('btn-export-pdf');
+    if (pdfBtn) pdfBtn.onclick = () => exportPDF('#doc-body', filename + '.pdf');
   },
 
   closeDocPreview() {
@@ -622,7 +646,7 @@ async function fetchExchangeRates() {
     DB.saveCurrencySettings({ rates, ratesDate: new Date().toISOString().slice(0, 10) });
     UI.toast('Exchange rates updated.', 'success');
   } catch (e) {
-    // silently ignore network errors
+    UI.toast('Could not update exchange rates — using cached rates.', 'default', 5000);
   }
 }
 
@@ -652,72 +676,86 @@ function isOverdue(dueDate) {
   return new Date(dueDate) < new Date() && new Date(dueDate).toDateString() !== new Date().toDateString();
 }
 
-function statusBadge(status) {
-  const map = {
-    'active':    '<span class="badge badge-active">Active</span>',
-    'on-hold':   '<span class="badge badge-on-hold">On Hold</span>',
-    'completed': '<span class="badge badge-completed">Completed</span>',
-    'draft':     '<span class="badge badge-draft">Draft</span>',
-  };
-  return map[status] || `<span class="badge">${status}</span>`;
+/* ── Security: HTML escape + sanitize ─────────────────────── */
+
+function esc(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
-function taskStatusBadge(status) {
-  const map = {
-    'todo':        '<span class="badge badge-todo">To Do</span>',
-    'in-progress': '<span class="badge badge-in-progress">In Progress</span>',
-    'completed':   '<span class="badge badge-done">Completed</span>',
-    'blocked':     '<span class="badge badge-critical">Blocked</span>',
-  };
-  return map[status] || `<span class="badge">${status}</span>`;
+function sanitize(html) {
+  if (typeof DOMPurify !== 'undefined') return DOMPurify.sanitize(html);
+  return html; // fallback if CDN unavailable
 }
 
-function priorityBadge(priority) {
-  const labels = { low: 'Low', medium: 'Medium', high: 'High', critical: 'Critical' };
-  return `<span class="badge badge-${priority}">${labels[priority] || priority}</span>`;
+/* ── Badge & Label Helpers ─────────────────────────────────── */
+
+const BADGE_MAPS = {
+  projectStatus: {
+    active:    ['badge-active',      'Active'],
+    'on-hold': ['badge-on-hold',     'On Hold'],
+    completed: ['badge-completed',   'Completed'],
+    draft:     ['badge-draft',       'Draft'],
+  },
+  taskStatus: {
+    todo:          ['badge-todo',        'To Do'],
+    'in-progress': ['badge-in-progress', 'In Progress'],
+    completed:     ['badge-done',        'Completed'],
+    blocked:       ['badge-critical',    'Blocked'],
+  },
+  priority: {
+    low:      ['badge-low',      'Low'],
+    medium:   ['badge-medium',   'Medium'],
+    high:     ['badge-high',     'High'],
+    critical: ['badge-critical', 'Critical'],
+  },
+  actionStatus: {
+    open:          ['badge-open',        'Open'],
+    'in-progress': ['badge-in-progress', 'In Progress'],
+    done:          ['badge-done',        'Done'],
+  },
+  poStatus: {
+    raised: ['badge-in-progress', 'Raised'],
+    issued: ['badge-active',      'Issued'],
+    closed: ['badge-done',        'Closed'],
+  },
+  invoiceStatus: {
+    pending:  ['badge-todo',        'Pending'],
+    approved: ['badge-in-progress', 'Approved'],
+    paid:     ['badge-done',        'Paid'],
+  },
+  a10InvStatus: {
+    draft:     ['badge-draft',     'Draft'],
+    sent:      ['badge-in-progress','Sent'],
+    paid:      ['badge-done',       'Paid'],
+    overdue:   ['badge-critical',   'Overdue'],
+    cancelled: ['badge',            'Cancelled'],
+  },
+};
+
+function badge(type, value) {
+  const map = BADGE_MAPS[type];
+  if (!map) return `<span class="badge">${esc(value)}</span>`;
+  const [cls, label] = map[value] || ['badge', value];
+  return `<span class="badge ${cls}">${label}</span>`;
 }
 
-function actionStatusBadge(status) {
-  const map = {
-    'open':        '<span class="badge badge-open">Open</span>',
-    'in-progress': '<span class="badge badge-in-progress">In Progress</span>',
-    'done':        '<span class="badge badge-done">Done</span>',
-  };
-  return map[status] || `<span class="badge">${status}</span>`;
-}
-
-function poStatusBadge(status) {
-  const map = {
-    'raised': '<span class="badge badge-in-progress">Raised</span>',
-    'issued': '<span class="badge badge-active">Issued</span>',
-    'closed': '<span class="badge badge-done">Closed</span>',
-  };
-  return map[status] || `<span class="badge">${status}</span>`;
-}
-
-function invoiceStatusBadge(status) {
-  const map = {
-    'pending':  '<span class="badge badge-todo">Pending</span>',
-    'approved': '<span class="badge badge-in-progress">Approved</span>',
-    'paid':     '<span class="badge badge-done">Paid</span>',
-  };
-  return map[status] || `<span class="badge">${status}</span>`;
-}
-
+/* Keep legacy function names as aliases for backwards compatibility */
+function statusBadge(s)       { return badge('projectStatus', s); }
+function taskStatusBadge(s)   { return badge('taskStatus', s); }
+function priorityBadge(s)     { return badge('priority', s); }
+function actionStatusBadge(s) { return badge('actionStatus', s); }
+function poStatusBadge(s)     { return badge('poStatus', s); }
+function invoiceStatusBadge(s){ return badge('invoiceStatus', s); }
+function a10InvStatusBadge(s) { return badge('a10InvStatus', s); }
 function statusLabel(s) {
-  const map = { 'active': 'Active', 'on-hold': 'On Hold', 'completed': 'Completed', 'draft': 'Draft' };
+  const map = { active: 'Active', 'on-hold': 'On Hold', completed: 'Completed', draft: 'Draft' };
   return map[s] || s;
-}
-
-function a10InvStatusBadge(status) {
-  const map = {
-    'draft':     '<span class="badge badge-draft">Draft</span>',
-    'sent':      '<span class="badge badge-in-progress">Sent</span>',
-    'paid':      '<span class="badge badge-done">Paid</span>',
-    'overdue':   '<span class="badge badge-critical">Overdue</span>',
-    'cancelled': '<span class="badge">Cancelled</span>',
-  };
-  return map[status] || `<span class="badge">${status}</span>`;
 }
 
 function calcInvTotals(items) {
@@ -886,6 +924,33 @@ function printContent(html, title) {
   } else {
     setTimeout(() => win.print(), 900);
   }
+}
+
+function exportPDF(contentSelector, filename) {
+  const el = document.querySelector(contentSelector) || document.getElementById('doc-body');
+  if (!el) { UI.toast('Nothing to export.', 'default'); return; }
+  if (typeof window.jspdf === 'undefined') {
+    UI.toast('PDF library not loaded. Try print instead.', 'default'); return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  doc.html(el, {
+    callback(d) { d.save(filename); },
+    x: 10, y: 10, width: 190, windowWidth: 800,
+    autoPaging: 'text',
+  });
+}
+
+function exportExcel(data, filename) {
+  if (typeof XLSX === 'undefined') {
+    UI.toast('Excel library not loaded.', 'default'); return;
+  }
+  const wb = XLSX.utils.book_new();
+  Object.entries(data).forEach(([sheetName, rows]) => {
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31));
+  });
+  XLSX.writeFile(wb, filename);
 }
 
 function exportHTML(html, filename, title) {
@@ -1307,7 +1372,7 @@ const ProjectView = {
           ${tabs.map(t => `<button class="tab-btn ${this.activeTab === t.id ? 'active' : ''}" data-tab="${t.id}">${t.label}</button>`).join('')}
         </div>
         <div class="tab-actions no-print">
-          <button class="btn btn-ghost btn-sm" id="btn-tab-export">↓ HTML</button>
+          <button class="btn btn-ghost btn-sm" id="btn-tab-export" title="Export tab (Excel for Budget, HTML for others)">↓ Export</button>
           <button class="btn btn-ghost btn-sm" id="btn-tab-print">⎙ Print</button>
         </div>
       </div>
@@ -1327,9 +1392,41 @@ const ProjectView = {
       printContent(html, title);
     });
     document.getElementById('btn-tab-export').addEventListener('click', () => {
-      const { html, title } = this._buildTabPrintHTML(projectId);
-      const filename = title.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.html';
-      exportHTML(html, filename, title);
+      if (this.activeTab === 'budget') {
+        /* Excel export for budget tab */
+        const proj = DB.projectById(projectId);
+        const items = DB.budgetItems().filter(b => b.projectId === projectId);
+        const allPOs = DB.purchaseOrders().filter(po => po.projectId === projectId);
+        const allInvs = DB.invoices().filter(inv => inv.projectId === projectId);
+        const cur = projCurrency(proj);
+        const budgetRows = [
+          ['Category', 'WBS', `Planned (${cur})`, 'Committed', 'Invoiced', 'Paid', 'Available'],
+          ...items.map(b => {
+            const pos = allPOs.filter(po => po.budgetItemId === b.id);
+            const invs = allInvs.filter(inv => pos.some(po => po.id === inv.poId));
+            const committed = pos.reduce((s, po) => s + (po.amount || 0), 0);
+            const invoiced = invs.reduce((s, i) => s + (i.amount || 0), 0);
+            const paid = invs.filter(i => i.status === 'paid').reduce((s, i) => s + (i.amount || 0), 0);
+            return [b.category, b.wbs || '', b.planned || 0, committed, invoiced, paid, (b.planned || 0) - committed];
+          }),
+        ];
+        const poRows = [
+          ['PO Number', 'Supplier', 'Description', 'Amount', 'Status'],
+          ...allPOs.map(po => [po.poNumber || '', po.supplier || '', po.description || '', po.amount || 0, po.status || '']),
+        ];
+        const invRows = [
+          ['Invoice #', 'Supplier', 'Description', 'Amount', 'Status'],
+          ...allInvs.map(inv => [inv.invoiceNumber || '', inv.supplier || '', inv.description || '', inv.amount || 0, inv.status || '']),
+        ];
+        exportExcel(
+          { 'Budget Lines': budgetRows, 'Purchase Orders': poRows, 'Invoices': invRows },
+          `${proj.name.replace(/[^a-z0-9]/gi, '_')}_budget.xlsx`
+        );
+      } else {
+        const { html, title } = this._buildTabPrintHTML(projectId);
+        const filename = title.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.html';
+        exportHTML(html, filename, title);
+      }
     });
 
     this._renderTab(projectId);
@@ -2353,7 +2450,7 @@ const ProjectModal = {
 
     document.getElementById('modal-cancel').addEventListener('click', UI.closeModal.bind(UI));
     document.getElementById('proj-delete')?.addEventListener('click', () => {
-      if (!UI.confirm('Delete this project and all its data? This cannot be undone.')) return;
+      if (!window.confirm(`Delete "${proj.name}" and all its tasks, budget, actions, and documents? This cannot be undone.`)) return;
       const id = proj.id;
       DB.saveProjects(DB.projects().filter(p => p.id !== id));
       DB.saveTasks(DB.tasks().filter(t => t.projectId !== id));
@@ -2374,6 +2471,17 @@ const ProjectModal = {
       e.preventDefault();
       const fd = new FormData(e.target);
       const data = Object.fromEntries(fd);
+
+      /* Validation */
+      if (!data.name?.trim()) { UI.toast('Project name is required.', 'default'); return; }
+      if (!data.client?.trim()) { UI.toast('Client name is required.', 'default'); return; }
+      if (data.startDate && data.endDate && data.startDate > data.endDate) {
+        UI.toast('End date must be after start date.', 'default'); return;
+      }
+      if (data.budget && parseFloat(data.budget) < 0) {
+        UI.toast('Budget cannot be negative.', 'default'); return;
+      }
+
       data.budget = parseFloat(data.budget) || 0;
 
       const projects = DB.projects();
@@ -2465,6 +2573,13 @@ const TaskModal = {
       e.preventDefault();
       const fd = new FormData(e.target);
       const data = Object.fromEntries(fd);
+
+      /* Validation */
+      if (!data.name?.trim()) { UI.toast('Task name is required.', 'default'); return; }
+      if (data.startDate && data.dueDate && data.startDate > data.dueDate) {
+        UI.toast('Due date must be after start date.', 'default'); return;
+      }
+
       data.percentDone = parseInt(data.percentDone, 10) || 0;
       data.projectId = projectId;
 
@@ -4166,12 +4281,95 @@ document.querySelectorAll('.nav-item[data-route]').forEach(el => {
   });
 });
 
-/* Keyboard: Escape closes modals */
+/* Global Search */
+(function setupSearch() {
+  const inp = document.getElementById('global-search');
+  const res = document.getElementById('search-results');
+  if (!inp || !res) return;
+
+  function runSearch(q) {
+    q = q.trim().toLowerCase();
+    if (q.length < 2) { res.classList.add('hidden'); return; }
+
+    const results = [];
+    DB.projects().forEach(p => {
+      if (p.name.toLowerCase().includes(q) || (p.client || '').toLowerCase().includes(q)) {
+        results.push({ type: 'Project', label: p.name, sub: p.client, action: () => Router.go('project', p.id) });
+      }
+    });
+    DB.tasks().filter(t => t.name.toLowerCase().includes(q)).forEach(t => {
+      const proj = DB.projectById(t.projectId);
+      results.push({ type: 'Task', label: t.name, sub: proj?.name || '', action: () => Router.go('project', t.projectId) });
+    });
+    DB.actionItems().filter(a => a.description.toLowerCase().includes(q)).forEach(a => {
+      const proj = DB.projectById(a.projectId);
+      results.push({ type: 'Action', label: a.description.slice(0, 60), sub: proj?.name || '', action: () => Router.go('project', a.projectId) });
+    });
+    DB.clients().filter(c => c.name.toLowerCase().includes(q)).forEach(c => {
+      results.push({ type: 'Client', label: c.name, sub: c.country || '', action: () => Router.go('clients') });
+    });
+
+    if (!results.length) {
+      res.innerHTML = `<div class="search-empty">No results for "${q}"</div>`;
+    } else {
+      res.innerHTML = results.slice(0, 8).map((r, i) =>
+        `<div class="search-item" role="option" tabindex="-1" data-idx="${i}">
+          <span class="search-type">${r.type}</span>
+          <span class="search-label">${r.label}</span>
+          ${r.sub ? `<span class="search-sub">${r.sub}</span>` : ''}
+        </div>`
+      ).join('');
+      res.querySelectorAll('.search-item').forEach((el, i) => {
+        el.addEventListener('mousedown', e => { e.preventDefault(); results[i].action(); inp.value = ''; res.classList.add('hidden'); });
+      });
+    }
+    res.classList.remove('hidden');
+  }
+
+  inp.addEventListener('input', () => runSearch(inp.value));
+  inp.addEventListener('blur', () => setTimeout(() => res.classList.add('hidden'), 150));
+  inp.addEventListener('focus', () => { if (inp.value.length >= 2) res.classList.remove('hidden'); });
+})();
+
+/* Keyboard shortcuts */
 document.addEventListener('keydown', e => {
+  const tag = document.activeElement?.tagName;
+  const inInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
   if (e.key === 'Escape') {
     UI.closeModal();
     UI.closeDocPreview();
     Notifications.close();
+    return;
+  }
+
+  /* Ctrl+S — save active modal form */
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    const form = document.querySelector('#modal-body form');
+    if (form) {
+      e.preventDefault();
+      form.requestSubmit();
+    }
+    return;
+  }
+
+  if (inInput) return; // don't intercept typing
+
+  /* N — new project (dashboard / active-projects) */
+  if (e.key === 'n' || e.key === 'N') {
+    if (['dashboard', 'active-projects'].includes(Router.current)) {
+      e.preventDefault();
+      ProjectModal.open();
+    }
+  }
+
+  /* / — focus search */
+  if (e.key === '/') {
+    const search = document.getElementById('global-search');
+    if (search) {
+      e.preventDefault();
+      search.focus();
+    }
   }
 });
 
@@ -4229,6 +4427,66 @@ const AdminView = {
         </div>
       </div>
     `;
+
+    /* Backup/Restore section */
+    const backupSection = document.createElement('div');
+    backupSection.className = 'section-card';
+    backupSection.style.marginTop = '24px';
+    backupSection.innerHTML = `
+      <div class="section-card-header">
+        <h3>Data Backup &amp; Restore</h3>
+      </div>
+      <div class="section-card-body" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:13px;color:var(--mid);margin-bottom:8px">
+            Export all your data as a JSON file for backup or migration to another browser/device.
+          </div>
+          <button class="btn btn-secondary" id="btn-export-backup">↓ Export Data (JSON)</button>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:13px;color:var(--mid);margin-bottom:8px">
+            Restore data from a previously exported JSON backup file.
+          </div>
+          <label class="btn btn-secondary" style="cursor:pointer">
+            ↑ Import Data (JSON)
+            <input type="file" id="inp-import-backup" accept=".json" style="display:none">
+          </label>
+        </div>
+      </div>
+    `;
+    document.getElementById('main-content').appendChild(backupSection);
+
+    document.getElementById('btn-export-backup')?.addEventListener('click', () => {
+      const data = DB.exportAll();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `a10-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      UI.toast('Backup exported successfully.', 'success');
+    });
+
+    document.getElementById('inp-import-backup')?.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          if (!data.version || !data.projects) throw new Error('Invalid backup file');
+          if (!window.confirm('This will replace ALL your current data with the backup. Continue?')) return;
+          DB.importAll(data);
+          UI.toast('Data restored successfully. Reloading...', 'success', 2000);
+          setTimeout(() => window.location.reload(), 2000);
+        } catch (err) {
+          UI.toast('Import failed: ' + err.message, 'default');
+        }
+      };
+      reader.readAsText(file);
+    });
 
     document.getElementById('btn-refresh-rates')?.addEventListener('click', () => {
       fetchExchangeRates().then(() => AdminView.render());
