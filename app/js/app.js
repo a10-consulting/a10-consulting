@@ -778,26 +778,39 @@ const PRINT_STYLES = `
   .doc-print th { background:var(--navy); color:#fff; font-weight:700; padding:8px 12px; text-align:left; font-size:12px; }
   .doc-print td { padding:7px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
   .doc-print tr:nth-child(even) td { background:var(--grey); }
-  /* Invoice doc */
-  .inv-doc { font-family:'Inter',sans-serif; max-width:860px; margin:0 auto; padding:40px; }
-  .inv-doc-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:40px; padding-bottom:20px; border-bottom:3px solid var(--navy); }
-  .inv-doc-brand { font-size:24px; font-weight:900; letter-spacing:-1px; color:var(--navy); }
-  .inv-doc-brand span { font-weight:300; color:var(--mid); }
-  .inv-doc-type { font-size:28px; font-weight:900; color:var(--accent); text-transform:uppercase; letter-spacing:-1px; }
-  .inv-doc-meta { display:flex; gap:32px; margin-bottom:32px; }
-  .inv-doc-block { flex:1; }
-  .inv-doc-block-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--mid); margin-bottom:8px; }
-  .inv-doc-block p { font-size:13px; margin-bottom:4px; }
-  .inv-doc-block strong { font-weight:700; }
-  .inv-tbl { width:100%; border-collapse:collapse; margin-bottom:24px; }
-  .inv-tbl th { background:var(--navy); color:#fff; font-size:12px; font-weight:700; padding:10px 12px; text-align:left; }
-  .inv-tbl td { padding:9px 12px; border-bottom:1px solid var(--line); font-size:13px; vertical-align:top; }
-  .inv-tbl tr:nth-child(even) td { background:var(--grey); }
-  .inv-totals { margin-left:auto; width:280px; }
-  .inv-tot-row { display:flex; justify-content:space-between; padding:5px 0; font-size:13px; }
-  .inv-tot-total { font-size:16px; font-weight:900; color:var(--navy); border-top:2px solid var(--navy); padding-top:8px; margin-top:6px; }
-  .inv-doc-notes { background:var(--grey); border-radius:6px; padding:12px 16px; font-size:13px; margin-top:24px; }
-  .inv-doc-notes strong { display:block; font-weight:700; margin-bottom:4px; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--mid); }
+  /* Invoice doc — compact A4 portrait */
+  .inv-doc { font-family:'Inter',sans-serif; max-width:760px; margin:0 auto; padding:18px 22px; font-size:12px; color:var(--navy); line-height:1.5; }
+  .inv-doc-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; padding-bottom:10px; border-bottom:2.5px solid var(--navy); }
+  .inv-brand-mark { font-size:28px; font-weight:900; letter-spacing:-2px; color:var(--navy); line-height:1; }
+  .inv-brand-sub { font-size:11px; font-weight:300; color:var(--accent); margin-top:2px; letter-spacing:.5px; }
+  .inv-doc-meta { text-align:right; }
+  .inv-doc-type-label { font-size:20px; font-weight:900; text-transform:uppercase; letter-spacing:.06em; color:var(--navy); }
+  .inv-doc-num { font-size:13px; font-weight:700; color:var(--accent); margin:3px 0; }
+  .inv-meta-tbl { margin-top:5px; margin-left:auto; border-collapse:collapse; }
+  .inv-meta-tbl td { padding:1px 5px; font-size:10px; }
+  .inv-meta-tbl td:first-child { color:var(--mid); font-weight:700; text-align:right; text-transform:uppercase; font-size:9px; letter-spacing:.04em; }
+  .inv-meta-tbl td:last-child { font-weight:600; color:var(--navy); }
+  .inv-parties { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:12px; }
+  .inv-party { padding:8px 12px; border:1px solid var(--line); border-radius:4px; }
+  .inv-party-to { border-left:2px solid var(--accent); }
+  .inv-party-label { font-size:9px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; color:var(--mid); margin-bottom:4px; }
+  .inv-party-name { font-size:13px; font-weight:900; margin-bottom:3px; color:var(--navy); }
+  .inv-party div:not(.inv-party-label):not(.inv-party-name) { font-size:11px; color:#3f4d61; line-height:1.5; }
+  .inv-items-tbl { width:100%; border-collapse:collapse; margin-bottom:8px; }
+  .inv-items-tbl th { background:var(--navy); color:#fff; font-weight:700; padding:6px 9px; text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.03em; }
+  .inv-items-tbl td { padding:5px 9px; border-bottom:1px solid var(--line); font-size:11px; vertical-align:top; }
+  .inv-items-tbl tr:last-child td { border-bottom:none; }
+  .inv-r { text-align:right !important; }
+  .inv-summary { display:flex; justify-content:flex-end; border-top:1.5px solid var(--navy); padding-top:10px; margin-bottom:10px; }
+  .inv-summary-tbl { border-collapse:collapse; width:220px; }
+  .inv-summary-tbl td { padding:3px 8px; font-size:12px; }
+  .inv-summary-tbl td:first-child { color:var(--mid); }
+  .inv-summary-tbl td:last-child { text-align:right; font-weight:600; }
+  .inv-summary-total td { font-size:15px; font-weight:900; color:var(--navy); border-top:2px solid var(--navy); padding-top:6px; }
+  .inv-payment { font-size:11px; color:#3f4d61; margin-bottom:3px; padding:7px 10px; background:var(--grey); border-radius:4px; }
+  .inv-terms { font-size:11px; color:#3f4d61; margin-bottom:3px; padding:2px 10px; }
+  .inv-notes { font-size:11px; color:var(--mid); border-top:1px solid var(--line); padding-top:8px; margin-top:8px; white-space:pre-wrap; }
+  .inv-legal { font-size:9px; color:var(--mid); text-align:center; margin-top:12px; padding-top:8px; border-top:1px solid var(--line); line-height:1.6; }
   /* Tab print styles */
   .print-section { margin-bottom:28px; }
   .print-section-title { font-size:16px; font-weight:900; color:var(--navy); border-bottom:2px solid var(--navy); padding-bottom:6px; margin-bottom:14px; }
@@ -845,7 +858,7 @@ const PRINT_STYLES = `
   .gantt-gridline { position:absolute; top:0; bottom:0; width:1px; background:var(--line); }
   @media print {
     body { padding:0; }
-    @page { margin:18mm 14mm; size:A4 landscape; }
+    @page { margin:12mm 10mm; size:A4 portrait; }
   }
 `;
 
@@ -1373,7 +1386,8 @@ const ProjectView = {
     else if (tab === 'gantt') {
       const tasks = DB.tasks().filter(t => t.projectId === proj.id);
       const ganttHtml = tasks.length ? this._buildGantt(tasks, proj) : '<p style="color:#6b7280">No tasks.</p>';
-      body = `<div class="print-section">
+      body = `<style>@media print { @page { margin:12mm 8mm; size:A4 landscape; } }</style>
+      <div class="print-section">
         <div class="print-section-title">Gantt Chart</div>
         ${ganttHtml}
       </div>`;
@@ -3966,10 +3980,14 @@ const InvoiceDocGenerator = {
           </table>
         </div>
 
-        ${a10.iban ? `<div class="inv-payment"><strong>Payment:</strong> IBAN ${a10.iban}${a10.bic ? ' &nbsp;|&nbsp; BIC/SWIFT: ' + a10.bic : ''}</div>` : ''}
+        ${a10.iban ? `<div class="inv-payment"><strong>Payment:</strong> IBAN ${a10.iban}${a10.bic ? ' &nbsp;·&nbsp; BIC/SWIFT: ' + a10.bic : ''}</div>` : ''}
         ${a10.paymentTerms ? `<div class="inv-terms"><strong>Payment Terms:</strong> ${a10.paymentTerms}</div>` : ''}
         ${client.paymentTerms && client.paymentTerms !== a10.paymentTerms ? `<div class="inv-terms">Client terms: ${client.paymentTerms}</div>` : ''}
-        ${inv.notes ? `<div class="inv-notes">${inv.notes}</div>` : ''}
+        ${inv.notes ? `<div class="inv-notes"><strong>Notes</strong>${inv.notes}</div>` : ''}
+        <div class="inv-legal">
+          ${a10.name || 'A10 Consulting'}${a10.nif ? ' &nbsp;·&nbsp; NIF: ' + a10.nif : ''}${a10.address ? ' &nbsp;·&nbsp; ' + a10.address : ''}${a10.city ? (a10.postalCode ? ', ' + a10.postalCode : '') + ' ' + a10.city : ''}${a10.country ? ', ' + a10.country : ''}<br>
+          Document processed by computer &nbsp;·&nbsp; ${isInv ? 'Invoice' : 'Credit Note'} No. ${inv.invoiceNumber} &nbsp;·&nbsp; Issued ${fmtDate(inv.date)}
+        </div>
       </div>`;
 
     UI.openDocPreview(`${typeLabel} ${inv.invoiceNumber}`, html);
